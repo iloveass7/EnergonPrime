@@ -27,11 +27,51 @@ PROVENANCE = "SIMULATED — recorded from simulator image 1.0.0"
 FIXTURE_VERSION = 1
 VOLATILE_BODY_KEYS = frozenset({"wall_time", "start_wall_time", "end_wall_time"})
 DROPPED_HEADERS = frozenset({"date", "server"})
-_NORMALIZE_DROP = VOLATILE_BODY_KEYS | {"elapsed_ms"}
+_NORMALIZE_DROP = VOLATILE_BODY_KEYS | {"elapsed_ms", "content-length"}
 DEFAULT_BASE_URL = "http://localhost:8000"
 DEFAULT_OUT = Path("tests/fixtures/contract/sim-1.0.0")
 HEALTH_WAIT_S = 30.0
 SSE_RECONNECT_S = 0.5
+SSE_KEEPALIVE_WAIT_S = 20.0
+EVIDENCE_DIR = Path("evidence/phase-0")
+SSE_EVENT_NAMES = (
+    "simulation.tick",
+    "allocation.status_changed",
+    "inventory.updated",
+    "simulator.notice",
+)
+REQUIRED_FIXTURES: tuple[str, ...] = (
+    # preflight
+    "health", "openapi", "admin_faults_clear_start", "admin_reset", "admin_pause",
+    "instance_initial",
+    # reads
+    "admin_step_01", "regions", "depots", "stations", "routes", "supply_arrivals",
+    "events_initial", "allocations_initial", "metrics_initial", "instance_after_steps",
+    "depot_by_id", "depot_unknown_404", "station_by_id", "station_unknown_404",
+    "demand_history", "demand_history_limit_over",
+    # allocations
+    "alloc_create", "alloc_replay", "alloc_key_mismatch_409", "alloc_unknown_depot_404",
+    "alloc_route_mismatch_409", "alloc_route_capacity_409", "alloc_invalid_422",
+    "alloc_cancel", "alloc_cancel_again_409", "alloc_cancel_unknown_404",
+    "alloc_lifecycle_create", "allocations_after_lifecycle", "metrics_after_lifecycle",
+    # events
+    "admin_event_route_disruption", "events_during_route_disruption",
+    "route_disruption_during", "admin_event_station_outage",
+    "events_during_station_outage", "station_outage_during", "events_list",
+    # faults
+    "admin_fault_stale_data", "depots_stale", "admin_faults_clear_stale_data",
+    "depots_fresh", "admin_fault_unavailable", "instance_unavailable_503",
+    "health_during_unavailable", "admin_audit_during_unavailable",
+    "admin_faults_clear_unavailable", "instance_after_unavailable",
+    "admin_fault_stream_disconnect", "stream_disconnect_503",
+    "admin_faults_clear_stream_disconnect", "instance_before_latency",
+    "admin_fault_latency", "instance_latency", "health_latency",
+    "admin_faults_clear_latency", "admin_fault_error_rate", "instance_error_rate_503",
+    "admin_faults_clear_error_rate", "instance_after_faults",
+    # finale
+    "admin_audit", "admin_run", "admin_pause_final", "admin_reset_final",
+    "instance_final", "sse_stream",
+)  # fmt: skip
 
 
 @dataclass
@@ -941,6 +981,90 @@ async def section_faults(ctx: SmokeContext) -> None:
         ]
 
 
+def _keepalive_gap_s(rec: SseRecorder) -> float | None:
+    """Seconds between the first ``: keepalive`` and the line before it."""
+    for seg, times in zip(rec.segments, rec.line_times, strict=True):
+        for i, line in enumerate(seg.lines):
+            if line == ": keepalive" and i > 0:
+                return round(times[i] - times[i - 1], 2)
+    return None
+
+
+async def section_finale(ctx: SmokeContext) -> None:
+    if ctx.sse is not None:
+        kept = await ctx.sse.wait_for(
+            comment="keepalive", timeout_s=SSE_KEEPALIVE_WAIT_S
+        )
+        ctx.manifest["timings"]["sse_keepalive_gap_s"] = _keepalive_gap_s(ctx.sse)
+        ctx.check(
+            "sse_keepalive", kept, f"no keepalive within {SSE_KEEPALIVE_WAIT_S:.0f} s"
+        )
+
+    audit = await ctx.call("admin_audit", "GET", "/admin/audit", params={"limit": 50})
+    ctx.check(
+        "admin_audit", _is_list(audit) and len(audit.body or []) > 0, f"{audit.status}"
+    )
+
+    # run advances the wall-clock-paced clock, so both bodies are volatile
+    ctx.expect(await ctx.call("admin_run", "POST", "/admin/run", volatile=True), 200)
+    ctx.expect(
+        await ctx.call("admin_pause_final", "POST", "/admin/pause", volatile=True), 200
+    )
+
+    notices = ctx.sse.count("simulator.notice") if ctx.sse is not None else 0
+    ctx.expect(await ctx.call("admin_reset_final", "POST", "/admin/reset"), 200)
+    ctx.current_tick = 0
+    if ctx.sse is not None:
+        ok = await ctx.sse.wait_for(
+            event="simulator.notice", at_least=notices + 1, timeout_s=3.0
+        )
+        ctx.check("sse_reset_notice", ok, "no simulator.notice after /admin/reset")
+    final = await ctx.call("instance_final", "GET", "/v1/instance")
+    final_tick = final.body.get("tick") if isinstance(final.body, dict) else None
+    ctx.check(
+        "instance_final", final.status == 200 and final_tick == 0, f"tick {final_tick}"
+    )
+    if ctx.sse is not None:
+        missing = [n for n in SSE_EVENT_NAMES if ctx.sse.count(n) == 0]
+        ctx.check("sse_all_event_names_seen", not missing, f"missing {missing}")
+
+
+def _load_fixtures(directory: Path) -> list[tuple[str, dict[str, Any]]]:
+    return [
+        (path.name.split("_", 1)[1].removesuffix(".json"), json.loads(path.read_text()))
+        for path in sorted(directory.glob("[0-9][0-9][0-9]_*.json"))
+    ]
+
+
+def _sse_sequence(doc: Mapping[str, Any]) -> list[Any]:
+    return [
+        [e["event"], normalize(e["data"])]
+        for seg in doc.get("segments", [])
+        if seg.get("status") == 200
+        for e in seg.get("events", [])
+    ]
+
+
+def compare_dirs(recorded: Path, fresh: Path) -> list[str]:
+    """Differences between two runs after dropping wall-clock data; [] means deterministic."""
+    old, new = _load_fixtures(recorded), _load_fixtures(fresh)
+    old_names, new_names = [n for n, _ in old], [n for n, _ in new]
+    if old_names != new_names:
+        missing = [n for n in old_names if n not in new_names]
+        extra = [n for n in new_names if n not in old_names]
+        return [f"fixture set/order differs: missing {missing}, extra {extra}"]
+    diffs: list[str] = []
+    for (name, a), (_, b) in zip(old, new, strict=True):
+        if a.get("volatile") or b.get("volatile"):
+            continue
+        if name == "sse_stream":
+            if _sse_sequence(a) != _sse_sequence(b):
+                diffs.append("sse_stream: event sequence differs")
+        elif normalize(a) != normalize(b):
+            diffs.append(f"{name}: normalized fixture differs")
+    return diffs
+
+
 Section = Callable[[SmokeContext], Awaitable[None]]
 SECTIONS: list[tuple[str, Section]] = [
     ("preflight", section_preflight),
@@ -948,6 +1072,7 @@ SECTIONS: list[tuple[str, Section]] = [
     ("allocations", section_allocations),
     ("events", section_events),
     ("faults", section_faults),
+    ("finale", section_finale),
 ]
 
 
@@ -1004,6 +1129,7 @@ async def run_smoke(
     """Run the selected sections in order; returns the process exit code."""
     ctx = SmokeContext(client, FixtureWriter(out_dir))
     sections_run: list[str] = []
+    aborted = False
     try:
         for name, section in SECTIONS:
             if only and name not in only:
@@ -1019,6 +1145,7 @@ async def run_smoke(
                 ctx.check(
                     f"section_{name}_completed", False, f"{type(exc).__name__}: {exc}"
                 )
+                aborted = True
                 break
     finally:
         if ctx.sse is not None:
@@ -1028,6 +1155,10 @@ async def run_smoke(
                 "recorder did not stop in 5 s",
             )
             ctx.writer.write_raw("sse_stream", "sse", ctx.sse.to_fixture())
+        if not aborted and len(sections_run) == len(SECTIONS):
+            recorded = {entry["name"] for entry in ctx.writer.index}
+            missing = [n for n in REQUIRED_FIXTURES if n not in recorded]
+            ctx.check("required_fixtures_recorded", not missing, f"missing {missing}")
         await _cleanup(client)
         ctx.manifest["sections_run"] = sections_run
         manifest = _write_manifest(ctx, out_dir, meta or {})
@@ -1052,6 +1183,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument(
         "--section", action="append", dest="sections", choices=[n for n, _ in SECTIONS]
+    )
+    parser.add_argument(
+        "--compare-to",
+        type=Path,
+        help="fixture dir that this run must reproduce exactly",
     )
     args = parser.parse_args(argv)
 
@@ -1078,6 +1214,32 @@ def main(argv: list[str] | None = None) -> int:
 
     code = asyncio.run(_run())
     manifest = json.loads((args.out / "manifest.json").read_text())
+
+    if args.compare_to is not None:
+        diffs = compare_dirs(args.compare_to, args.out)
+        manifest["determinism_compare"] = {
+            "against": str(args.compare_to),
+            "diffs": diffs,
+        }
+        print(
+            f"DETERMINISM vs {args.compare_to}: {'identical' if not diffs else 'DIFFERS'}"
+        )
+        for diff in diffs:
+            print(f"  DIFF  {diff}")
+        if diffs:
+            code = 1
+
+    if not args.sections:
+        EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        report = EVIDENCE_DIR / f"contract-smoke-{stamp}.json"
+        report.write_text(
+            json.dumps({**manifest, "exit_code": code}, indent=2, ensure_ascii=False)
+            + "\n",
+            encoding="utf-8",
+        )
+        print(f"evidence: {report}")
+
     passed = sum(c["ok"] for c in manifest["checks"])
     print(f"CONTRACT SMOKE: {passed}/{len(manifest['checks'])} checks passed")
     return code
