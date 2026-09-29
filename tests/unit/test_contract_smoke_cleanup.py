@@ -14,7 +14,9 @@ async def _boom(ctx: smoke.SmokeContext) -> None:
     raise RuntimeError("section blew up mid-fault")
 
 
-def test_cleanup_runs_when_section_raises(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cleanup_runs_when_section_raises(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     calls: list[tuple[str, str]] = []
 
     def handler(request: httpx.Request) -> httpx.Response:

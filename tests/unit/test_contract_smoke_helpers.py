@@ -35,11 +35,17 @@ def _exchange(name: str, body: object = None, body_text: str | None = None) -> E
 
 
 def test_envelope_code_domain() -> None:
-    assert envelope_code({"detail": {"code": "ROUTE_MISMATCH", "message": "x"}}) == "ROUTE_MISMATCH"
+    assert (
+        envelope_code({"detail": {"code": "ROUTE_MISMATCH", "message": "x"}})
+        == "ROUTE_MISMATCH"
+    )
 
 
 def test_envelope_code_fault() -> None:
-    assert envelope_code({"error": {"code": "FAULT_INJECTED", "message": "x"}}) == "FAULT_INJECTED"
+    assert (
+        envelope_code({"error": {"code": "FAULT_INJECTED", "message": "x"}})
+        == "FAULT_INJECTED"
+    )
 
 
 def test_envelope_code_validation() -> None:
@@ -62,7 +68,10 @@ def test_normalize_drops_volatile_keys_at_any_depth() -> None:
         "response": {
             "body": [
                 {"id": 1, "wall_time": "2026-01-01T00:00:00Z", "tick": 3},
-                {"id": 2, "nested": {"start_wall_time": "a", "end_wall_time": "b", "keep": 1}},
+                {
+                    "id": 2,
+                    "nested": {"start_wall_time": "a", "end_wall_time": "b", "keep": 1},
+                },
             ]
         },
     }

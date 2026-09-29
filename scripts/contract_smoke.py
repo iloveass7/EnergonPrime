@@ -327,7 +327,9 @@ class SmokeContext:
         elapsed_ms = (time.perf_counter() - started) * 1000
         body, body_text = _decode(resp)
         headers: dict[str, str | None] = {
-            k.lower(): v for k, v in resp.headers.items() if k.lower() not in DROPPED_HEADERS
+            k.lower(): v
+            for k, v in resp.headers.items()
+            if k.lower() not in DROPPED_HEADERS
         }
         headers.setdefault("x-simulator-stale", None)
         ex = Exchange(
@@ -353,7 +355,9 @@ class SmokeContext:
         print(f"  {'PASS' if ok else 'FAIL'}  {name}" + ("" if ok else f": {detail}"))
         return bool(ok)
 
-    def expect(self, ex: Exchange, status: int | tuple[int, ...], code: str | None = None) -> bool:
+    def expect(
+        self, ex: Exchange, status: int | tuple[int, ...], code: str | None = None
+    ) -> bool:
         """Check an exchange's status (and envelope code); the check is named after the fixture."""
         wanted = status if isinstance(status, tuple) else (status,)
         got_code = envelope_code(ex.body)
@@ -381,26 +385,38 @@ async def section_preflight(ctx: SmokeContext) -> None:
         except httpx.TransportError:
             pass
         if time.monotonic() > deadline:
-            ctx.check("health_ready", False, f"no 200 from /v1/health within {HEALTH_WAIT_S:.0f} s")
+            ctx.check(
+                "health_ready",
+                False,
+                f"no 200 from /v1/health within {HEALTH_WAIT_S:.0f} s",
+            )
             raise SmokeAbort("simulator not reachable")
         await asyncio.sleep(0.5)
 
     health = await ctx.call("health", "GET", "/v1/health")
     ctx.check(
         "health",
-        health.status == 200 and isinstance(health.body, dict) and health.body.get("status") == "ok",
+        health.status == 200
+        and isinstance(health.body, dict)
+        and health.body.get("status") == "ok",
         f"got {health.status} {health.body}",
     )
 
     spec = await ctx.call("openapi", "GET", "/openapi.json")
     paths = spec.body.get("paths", {}) if isinstance(spec.body, dict) else {}
     has_admin = "/admin/events" in paths and "/admin/faults" in paths
-    ctx.check("openapi", spec.status == 200 and has_admin, "admin schemas absent (plan Decision 3)")
+    ctx.check(
+        "openapi",
+        spec.status == 200 and has_admin,
+        "admin schemas absent (plan Decision 3)",
+    )
     if not has_admin:
         raise SmokeAbort("openapi.json lacks admin paths — stop and ask")
     ctx.openapi = spec.body
 
-    ctx.expect(await ctx.call("admin_faults_clear_start", "POST", "/admin/faults/clear"), 200)
+    ctx.expect(
+        await ctx.call("admin_faults_clear_start", "POST", "/admin/faults/clear"), 200
+    )
     ctx.expect(await ctx.call("admin_reset", "POST", "/admin/reset"), 200)
     ctx.expect(await ctx.call("admin_pause", "POST", "/admin/pause"), 200)
 
@@ -413,7 +429,8 @@ async def section_preflight(ctx: SmokeContext) -> None:
     )
     ctx.current_tick = body.get("tick")
     ctx.manifest["instance"] = {
-        k: body.get(k) for k in ("seed", "scenario_id", "scenario_version", "tick_minutes")
+        k: body.get(k)
+        for k in ("seed", "scenario_id", "scenario_version", "tick_minutes")
     }
 
 
@@ -426,7 +443,9 @@ async def section_reads(ctx: SmokeContext) -> None:
     ctx.check("admin_steps_advance_ticks", tick == 4, f"tick after 4 steps = {tick}")
     if ctx.sse is not None:
         ok = await ctx.sse.wait_for(event="simulation.tick", at_least=4, timeout_s=3.0)
-        ctx.check("sse_tick_after_step", ok, f"{ctx.sse.count('simulation.tick')} tick events")
+        ctx.check(
+            "sse_tick_after_step", ok, f"{ctx.sse.count('simulation.tick')} tick events"
+        )
 
     lists: dict[str, Exchange] = {}
     for name, path in (
@@ -442,43 +461,66 @@ async def section_reads(ctx: SmokeContext) -> None:
         ctx.check(name, _is_list(ex), f"got {ex.status} {type(ex.body).__name__}")
     for name in ("regions", "depots", "stations", "routes"):
         ctx.check(f"{name}_non_empty", bool(lists[name].body), "empty list")
-    ctx.check("stale_header_absent_baseline", not is_stale(lists["depots"].headers), "stale on baseline")
+    ctx.check(
+        "stale_header_absent_baseline",
+        not is_stale(lists["depots"].headers),
+        "stale on baseline",
+    )
     ctx.topology = {
         kind: {item["id"]: item for item in lists[kind].body or []}
         for kind in ("depots", "stations", "routes")
     }
 
     metrics = await ctx.call("metrics_initial", "GET", "/v1/metrics")
-    ctx.check("metrics_initial", metrics.status == 200 and isinstance(metrics.body, dict), f"{metrics.status}")
+    ctx.check(
+        "metrics_initial",
+        metrics.status == 200 and isinstance(metrics.body, dict),
+        f"{metrics.status}",
+    )
     inst = await ctx.call("instance_after_steps", "GET", "/v1/instance")
     inst_tick = inst.body.get("tick") if isinstance(inst.body, dict) else None
-    ctx.check("instance_after_steps", inst.status == 200 and inst_tick == 4, f"tick {inst_tick}")
+    ctx.check(
+        "instance_after_steps",
+        inst.status == 200 and inst_tick == 4,
+        f"tick {inst_tick}",
+    )
 
     for kind, singular in (("depots", "depot"), ("stations", "station")):
         first_id = next(iter(ctx.topology[kind]))
         one = await ctx.call(f"{singular}_by_id", "GET", f"/v1/{kind}/{first_id}")
         ctx.check(
             f"{singular}_by_id",
-            one.status == 200 and isinstance(one.body, dict) and one.body.get("id") == first_id,
+            one.status == 200
+            and isinstance(one.body, dict)
+            and one.body.get("id") == first_id,
             f"got {one.status}",
         )
         ctx.expect(
-            await ctx.call(f"{singular}_unknown_404", "GET", f"/v1/{kind}/does-not-exist"),
+            await ctx.call(
+                f"{singular}_unknown_404", "GET", f"/v1/{kind}/does-not-exist"
+            ),
             404,
             "NOT_FOUND",
         )
 
     station_id = next(iter(ctx.topology["stations"]))
     hist = await ctx.call(
-        "demand_history", "GET", "/v1/demand-history", params={"station_id": station_id, "limit": 12}
+        "demand_history",
+        "GET",
+        "/v1/demand-history",
+        params={"station_id": station_id, "limit": 12},
     )
     rows = hist.body if isinstance(hist.body, list) else []
     ctx.check(
         "demand_history",
-        _is_list(hist) and 0 < len(rows) <= 12 and all(r.get("station_id") == station_id for r in rows),
+        _is_list(hist)
+        and 0 < len(rows) <= 12
+        and all(r.get("station_id") == station_id for r in rows),
         f"got {hist.status} with {len(rows)} rows",
     )
-    over = await ctx.call("demand_history_limit_over", "GET", "/v1/demand-history", params={"limit": 2001})
+    over = await ctx.call(
+        "demand_history_limit_over", "GET", "/v1/demand-history", params={"limit": 2001}
+    )
     ctx.manifest["findings"]["demand_history_limit_2001"] = {
         "status": over.status,
         "rows": len(over.body) if isinstance(over.body, list) else None,
@@ -486,10 +528,181 @@ async def section_reads(ctx: SmokeContext) -> None:
     }
 
 
+def choose_route_and_quantity(
+    topology: Mapping[str, Mapping[str, dict[str, Any]]], fuel: str, cap: float
+) -> tuple[dict[str, Any], float]:
+    """First AVAILABLE route whose shipment fits the route limit and destination headroom."""
+    for route in topology["routes"].values():
+        if route.get("status") != "AVAILABLE":
+            continue
+        station = topology["stations"][route["destination_station_id"]]
+        headroom = station["capacity"][fuel] - station["inventory"][fuel]
+        qty = min(cap, route["max_shipment"], headroom)
+        if qty >= 1:
+            return route, qty
+    raise SmokeAbort(f"no AVAILABLE route can take >= 1 L of {fuel}")
+
+
+def other_station(
+    topology: Mapping[str, Mapping[str, dict[str, Any]]], route: Mapping[str, Any]
+) -> str:
+    """A station the route does not serve, for provoking ROUTE_MISMATCH."""
+    return next(
+        sid for sid in topology["stations"] if sid != route["destination_station_id"]
+    )
+
+
+def _alloc_body(
+    route: Mapping[str, Any], key: str, qty: float, fuel: str = "DIESEL"
+) -> dict[str, Any]:
+    return {
+        "idempotency_key": key,
+        "source_depot_id": route["source_depot_id"],
+        "destination_station_id": route["destination_station_id"],
+        "route_id": route["id"],
+        "fuel_type": fuel,
+        "quantity": qty,
+    }
+
+
+async def section_allocations(ctx: SmokeContext) -> None:
+    route, qty = choose_route_and_quantity(ctx.topology, "DIESEL", cap=1000)
+    ctx.manifest["findings"]["happy_path"] = {
+        "route_id": route["id"],
+        "fuel": "DIESEL",
+        "quantity": qty,
+    }
+    body = _alloc_body(route, "p0-create-1", qty)
+
+    created = await ctx.call("alloc_create", "POST", "/v1/allocations", json=body)
+    created_body = created.body if isinstance(created.body, dict) else {}
+    ctx.check(
+        "alloc_create",
+        created.status == 201 and created_body.get("status") == "PENDING",
+        f"got {created.status} {created_body.get('status')}",
+    )
+    alloc_id = created_body.get("id")
+
+    replay = await ctx.call("alloc_replay", "POST", "/v1/allocations", json=body)
+    replay_id = replay.body.get("id") if isinstance(replay.body, dict) else None
+    ctx.manifest["findings"]["replay_status"] = replay.status
+    ctx.check(
+        "alloc_replay",
+        replay.status in (200, 201) and replay_id == alloc_id and alloc_id is not None,
+        f"got {replay.status} id {replay_id} (created id {alloc_id})",
+    )
+
+    ctx.expect(
+        await ctx.call(
+            "alloc_key_mismatch_409",
+            "POST",
+            "/v1/allocations",
+            json={**body, "quantity": qty - 1},
+        ),
+        409,
+        "IDEMPOTENCY_KEY_MISMATCH",
+    )
+    bad_depot = {
+        **_alloc_body(route, "p0-404-1", qty),
+        "source_depot_id": "does-not-exist",
+    }
+    ctx.expect(
+        await ctx.call(
+            "alloc_unknown_depot_404", "POST", "/v1/allocations", json=bad_depot
+        ),
+        404,
+        "NOT_FOUND",
+    )
+    mismatch = {
+        **_alloc_body(route, "p0-mismatch-1", qty),
+        "destination_station_id": other_station(ctx.topology, route),
+    }
+    ctx.expect(
+        await ctx.call(
+            "alloc_route_mismatch_409", "POST", "/v1/allocations", json=mismatch
+        ),
+        409,
+        "ROUTE_MISMATCH",
+    )
+    too_big = _alloc_body(route, "p0-cap-1", route["max_shipment"] + 1)
+    ctx.expect(
+        await ctx.call(
+            "alloc_route_capacity_409", "POST", "/v1/allocations", json=too_big
+        ),
+        409,
+        "ROUTE_CAPACITY_EXCEEDED",
+    )
+    ctx.expect(
+        await ctx.call(
+            "alloc_invalid_422",
+            "POST",
+            "/v1/allocations",
+            json=_alloc_body(route, "p0-422-1", 0),
+        ),
+        422,
+        "VALIDATION",
+    )
+
+    cancel = await ctx.call(
+        "alloc_cancel", "POST", f"/v1/allocations/{alloc_id}/cancel"
+    )
+    cancel_status = cancel.body.get("status") if isinstance(cancel.body, dict) else None
+    ctx.check(
+        "alloc_cancel",
+        cancel.status == 200 and cancel_status == "CANCELLED",
+        f"got {cancel.status} {cancel_status}",
+    )
+    ctx.expect(
+        await ctx.call(
+            "alloc_cancel_again_409", "POST", f"/v1/allocations/{alloc_id}/cancel"
+        ),
+        409,
+        "CANNOT_CANCEL",
+    )
+    ctx.expect(
+        await ctx.call(
+            "alloc_cancel_unknown_404", "POST", "/v1/allocations/999999/cancel"
+        ),
+        404,
+        "ALLOCATION_NOT_FOUND",
+    )
+
+    life = await ctx.call(
+        "alloc_lifecycle_create",
+        "POST",
+        "/v1/allocations",
+        json=_alloc_body(route, "p0-lifecycle-1", min(500, qty)),
+    )
+    ctx.expect(life, 201)
+    life_id = life.body.get("id") if isinstance(life.body, dict) else None
+    await ctx.step(int(route["transit_ticks"]) + 2)
+    ledger = await ctx.call("allocations_after_lifecycle", "GET", "/v1/allocations")
+    states = (
+        {a.get("id"): a.get("status") for a in ledger.body}
+        if isinstance(ledger.body, list)
+        else {}
+    )
+    ctx.check(
+        "allocations_after_lifecycle",
+        states.get(life_id) == "ARRIVED" and states.get(alloc_id) == "CANCELLED",
+        f"lifecycle {states.get(life_id)}, cancelled {states.get(alloc_id)}",
+    )
+    metrics = await ctx.call("metrics_after_lifecycle", "GET", "/v1/metrics")
+    ctx.check("metrics_after_lifecycle", metrics.status == 200, f"got {metrics.status}")
+    if ctx.sse is not None:
+        for name in ("allocation.status_changed", "inventory.updated"):
+            ctx.check(
+                f"sse_{name}",
+                await ctx.sse.wait_for(event=name, timeout_s=3.0),
+                "not seen on stream",
+            )
+
+
 Section = Callable[[SmokeContext], Awaitable[None]]
 SECTIONS: list[tuple[str, Section]] = [
     ("preflight", section_preflight),
     ("reads", section_reads),
+    ("allocations", section_allocations),
 ]
 
 
@@ -498,8 +711,16 @@ async def _start_sse(ctx: SmokeContext) -> None:
     ctx.sse = SseRecorder(ctx.client)
     ctx.sse.start()
     connected = await ctx.sse.wait_for(comment="connected", timeout_s=5.0)
-    first = ctx.sse.segments[0].lines[0] if ctx.sse.segments and ctx.sse.segments[0].lines else None
-    ctx.check("sse_connected_comment_first", connected and first == ": connected", f"first line {first!r}")
+    first = (
+        ctx.sse.segments[0].lines[0]
+        if ctx.sse.segments and ctx.sse.segments[0].lines
+        else None
+    )
+    ctx.check(
+        "sse_connected_comment_first",
+        connected and first == ": connected",
+        f"first line {first!r}",
+    )
 
 
 async def _cleanup(client: httpx.AsyncClient) -> None:
@@ -511,7 +732,9 @@ async def _cleanup(client: httpx.AsyncClient) -> None:
             print(f"  WARN  cleanup {path} failed: {exc}", file=sys.stderr)
 
 
-def _write_manifest(ctx: SmokeContext, out_dir: Path, meta: Mapping[str, Any]) -> dict[str, Any]:
+def _write_manifest(
+    ctx: SmokeContext, out_dir: Path, meta: Mapping[str, Any]
+) -> dict[str, Any]:
     manifest = {
         "fixture_version": FIXTURE_VERSION,
         "provenance": PROVENANCE,
@@ -548,11 +771,17 @@ async def run_smoke(
                 if name == "preflight":
                     await _start_sse(ctx)
             except Exception as exc:  # noqa: BLE001 - any failure aborts the run, cleanup still runs
-                ctx.check(f"section_{name}_completed", False, f"{type(exc).__name__}: {exc}")
+                ctx.check(
+                    f"section_{name}_completed", False, f"{type(exc).__name__}: {exc}"
+                )
                 break
     finally:
         if ctx.sse is not None:
-            ctx.check("sse_stop_within_deadline", await ctx.sse.stop(), "recorder did not stop in 5 s")
+            ctx.check(
+                "sse_stop_within_deadline",
+                await ctx.sse.stop(),
+                "recorder did not stop in 5 s",
+            )
             ctx.writer.write_raw("sse_stream", "sse", ctx.sse.to_fixture())
         await _cleanup(client)
         ctx.manifest["sections_run"] = sections_run
@@ -562,14 +791,18 @@ async def run_smoke(
 
 def _run_quiet(cmd: list[str]) -> str | None:
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=10)
+        out = subprocess.run(
+            cmd, capture_output=True, text=True, check=True, timeout=10
+        )
     except (OSError, subprocess.SubprocessError):
         return None
     return out.stdout.strip() or None
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
+    parser = argparse.ArgumentParser(
+        description=__doc__.splitlines()[0] if __doc__ else None
+    )
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument(
@@ -580,7 +813,14 @@ def main(argv: list[str] | None = None) -> int:
     meta = {
         "image": IMAGE,
         "image_digest": _run_quiet(
-            ["docker", "image", "inspect", "--format", "{{index .RepoDigests 0}}", IMAGE]
+            [
+                "docker",
+                "image",
+                "inspect",
+                "--format",
+                "{{index .RepoDigests 0}}",
+                IMAGE,
+            ]
         ),
         "git_sha": _run_quiet(["git", "rev-parse", "HEAD"]),
         "base_url": args.base_url,

@@ -4,7 +4,15 @@ from scripts.contract_smoke import SseEvent, parse_sse_lines
 
 
 def test_parse_sse_lines_events_and_comments() -> None:
-    lines = [": connected", "", "event: simulation.tick", 'data: {"tick": 1}', "", ": keepalive", ""]
+    lines = [
+        ": connected",
+        "",
+        "event: simulation.tick",
+        'data: {"tick": 1}',
+        "",
+        ": keepalive",
+        "",
+    ]
     events, comments = parse_sse_lines(lines)
     assert events == [SseEvent("simulation.tick", {"tick": 1})]
     assert comments == ["connected", "keepalive"]
@@ -21,5 +29,5 @@ def test_parse_sse_lines_trailing_event_without_blank_is_dropped() -> None:
 
 
 def test_parse_sse_lines_multiline_data_and_default_event_name() -> None:
-    events, _ = parse_sse_lines(["data: {\"a\":", "data: 1}", ""])
+    events, _ = parse_sse_lines(['data: {"a":', "data: 1}", ""])
     assert events == [SseEvent("message", {"a": 1})]
