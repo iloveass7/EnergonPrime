@@ -209,7 +209,7 @@ async def decisions(
                 .scalars()
                 .all()
             )
-            recs = (await s.execute(select(RecommendationRow).where(RecommendationRow.status != "PROPOSED")
+            recs = (await s.execute(select(RecommendationRow).where(RecommendationRow.status.not_in(("PROPOSED", "SUPERSEDED")))
                                     .order_by(desc(RecommendationRow.created_at)).limit(limit))).scalars().all()  # fmt: skip
     except Exception as exc:  # noqa: BLE001
         return problem(503, "DATABASE_UNAVAILABLE", str(exc), retryable=True)
