@@ -27,6 +27,41 @@ run, reset, inject crisis scenarios or faults.
 
 ## Architecture (modular monolith: one image, two roles)
 
+```mermaid
+flowchart TD
+    SIM["BUP Simulator 1.0.0<br/>(REST truth + SSE hint)"]
+    SC["simclient<br/>(retry+jitter, circuit breaker,<br/>in-flight cap, stale detection)"]
+    subgraph WK["worker (x1, Redis leader lock)"]
+        direction LR
+        W1[snapshot] --> W2[detect] --> W3["forecast<br/>(structural profile,<br/>5.1% WAPE)"]
+        W3 --> W4["risk<br/>projection"] --> W5["greedy<br/>planner"]
+        W5 --> W6["independent<br/>validator"] --> W7["explainable<br/>recommendations"]
+    end
+    RD[("Redis<br/>(hot state, pub/sub)")]
+    PG[("Neon Postgres<br/>(recommendations, intents,<br/>alerts, audit)")]
+    API["api (FastAPI xN)<br/>reads + approve / reject / cancel<br/>with freshness gate, atomic claim,<br/>idempotency key"]
+    WEB["web<br/>(React UI via nginx,<br/>SSE + polling)"]
+    OPR([operator])
+    SIM --> SC --> WK
+    WK --> RD & PG
+    RD & PG --> API
+    API --> WEB --> OPR
+    API -->|"POST /v1/allocations"| SIM
+    subgraph OBS[Observability]
+        direction LR
+        PROM["Prometheus<br/>(scrapes api + worker metrics)"] --> GRAF["Grafana<br/>(dashboards + alert rules)"]
+        LOGS[structlog JSON logs]
+        HEALTH[health model]
+    end
+    API & WK -.->|metrics| OBS
+    subgraph CICD["CI/CD (GitHub Actions)"]
+        direction LR
+        C1["lint + tests"] --> C2["integration<br/>(compose, e2e,<br/>Playwright, k6)"] --> C3["package<br/>(GHCR)"]
+        C3 --> C4[deploy] --> C5[health check]
+    end
+    OPR ~~~ CICD
+```
+
 ```
 BUP Simulator 1.0.0 (REST truth + SSE hint)
       │  simclient: typed ACL, retry+jitter, circuit breaker, in-flight cap, stale header, SSE
