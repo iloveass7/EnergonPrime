@@ -33,8 +33,12 @@ export function RecommendationCard({ rec, onReview, compact }: { rec: Recommenda
 /** Review dialog state lives above the list, so a re-plan never closes it under the operator. */
 export function useRecReview(recs: Recommendation[], blocked: string | null) {
   const [open, setOpen] = useState<Recommendation | null>(null);
-  const active = open != null && recs.some((r) => r.id === open.id);
-  const dialog = open ? <RecommendationDetail rec={open} blocked={blocked} superseded={!active} onClose={() => setOpen(null)} /> : null;
+  // Follow re-plans: review the planner's current recommendation for the same station-fuel,
+  // so approving never targets an id the planner already replaced.
+  const current = open && (recs.find((r) => r.id === open.id) ?? recs.find((r) => r.station_id === open.station_id && r.fuel_type === open.fuel_type));
+  const dialog = open ? (
+    <RecommendationDetail key={`${open.station_id}-${open.fuel_type}`} rec={current ?? open} blocked={blocked} superseded={!current} onClose={() => setOpen(null)} />
+  ) : null;
   return [setOpen, dialog] as const;
 }
 
