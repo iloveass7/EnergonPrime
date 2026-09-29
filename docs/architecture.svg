@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1090" viewBox="0 0 1280 1090" role="img" aria-labelledby="title desc">
+  <title id="title">EnergonPrime architecture</title>
+  <desc id="desc">Simulator feeds simclient and a single leader worker (snapshot, detect, forecast, risk, planner, validator, recommendations) which writes to Redis and Postgres; the FastAPI api reads them, serves the React web UI to the operator, and posts approved allocations back to the simulator. Prometheus/Grafana observability and a GitHub Actions CI/CD pipeline surround it.</desc>
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: #e6edf3; text-anchor: middle; }
+      .t  { font-size: 15px; font-weight: 600; }
+      .ts { font-size: 13px; font-weight: 600; }
+      .s  { font-size: 12px; fill: #8b949e; }
+      .xs { font-size: 10.5px; fill: #8b949e; }
+      .h  { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-anchor: start; }
+      .hm { font-size: 12px; fill: #8b949e; font-weight: 400; letter-spacing: 0; }
+      .lbl { font-size: 11px; fill: #8b949e; }
+    </style>
+    <marker id="a-gray" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8b949e"/></marker>
+    <marker id="a-sim" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f0883e"/></marker>
+    <marker id="a-wk" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#58a6ff"/></marker>
+    <marker id="a-db" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#bc8cff"/></marker>
+    <marker id="a-api" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#3fb950"/></marker>
+    <marker id="a-web" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#39c5cf"/></marker>
+    <marker id="a-obs" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f778ba"/></marker>
+    <marker id="a-ci" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#d29922"/></marker>
+  </defs>
+
+  <rect x="1" y="1" width="1278" height="1088" rx="20" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+
+  <!-- title -->
+  <text x="40" y="54" style="text-anchor:start;font-size:24px;font-weight:700">EnergonPrime <tspan style="font-weight:400;fill:#8b949e">architecture</tspan></text>
+  <text x="1240" y="54" class="s" style="text-anchor:end">modular monolith · one image, two roles</text>
+
+  <!-- simulator + simclient -->
+  <rect x="180" y="96" width="300" height="70" rx="12" fill="#f0883e" fill-opacity=".12" stroke="#f0883e"/>
+  <text x="330" y="126" class="t">BUP Simulator 1.0.0</text>
+  <text x="330" y="148" class="s">REST truth · SSE hint</text>
+
+  <line x1="480" y1="131" x2="800" y2="131" stroke="#f0883e" stroke-width="2" marker-end="url(#a-sim)"/>
+  <text x="640" y="121" class="lbl">REST poll + SSE hint</text>
+
+  <rect x="800" y="90" width="300" height="82" rx="12" fill="#f0883e" fill-opacity=".06" stroke="#f0883e" stroke-opacity=".7"/>
+  <text x="950" y="117" class="t">simclient</text>
+  <text x="950" y="138" class="s">retry + jitter · circuit breaker</text>
+  <text x="950" y="156" class="s">in-flight cap · stale detection</text>
+
+  <line x1="950" y1="172" x2="950" y2="210" stroke="#58a6ff" stroke-width="2" marker-end="url(#a-wk)"/>
+
+  <!-- worker pipeline -->
+  <rect x="80" y="210" width="1120" height="170" rx="16" fill="#58a6ff" fill-opacity=".05" stroke="#58a6ff" stroke-opacity=".55"/>
+  <text x="100" y="238" class="h" style="fill:#58a6ff">WORKER ×1 <tspan class="hm">· Redis leader lock · SSE hint + 1 s poll → coalesced refresh</tspan></text>
+
+  <g>
+    <rect x="92"  y="258" width="136" height="90" rx="10" fill="#58a6ff" fill-opacity=".12" stroke="#58a6ff"/>
+    <rect x="252" y="258" width="136" height="90" rx="10" fill="#58a6ff" fill-opacity=".12" stroke="#58a6ff"/>
+    <rect x="412" y="258" width="136" height="90" rx="10" fill="#58a6ff" fill-opacity=".12" stroke="#58a6ff"/>
+    <rect x="572" y="258" width="136" height="90" rx="10" fill="#58a6ff" fill-opacity=".12" stroke="#58a6ff"/>
+    <rect x="732" y="258" width="136" height="90" rx="10" fill="#58a6ff" fill-opacity=".12" stroke="#58a6ff"/>
+    <rect x="892" y="258" width="136" height="90" rx="10" fill="#58a6ff" fill-opacity=".12" stroke="#58a6ff"/>
+    <rect x="1052" y="258" width="136" height="90" rx="10" fill="#3fb950" fill-opacity=".12" stroke="#3fb950"/>
+  </g>
+  <g stroke="#58a6ff" stroke-width="2">
+    <line x1="228" y1="303" x2="252" y2="303" marker-end="url(#a-wk)"/>
+    <line x1="388" y1="303" x2="412" y2="303" marker-end="url(#a-wk)"/>
+    <line x1="548" y1="303" x2="572" y2="303" marker-end="url(#a-wk)"/>
+    <line x1="708" y1="303" x2="732" y2="303" marker-end="url(#a-wk)"/>
+    <line x1="868" y1="303" x2="892" y2="303" marker-end="url(#a-wk)"/>
+    <line x1="1028" y1="303" x2="1052" y2="303" marker-end="url(#a-wk)"/>
+  </g>
+  <text x="160"  y="292" class="ts">snapshot</text>
+  <text x="160"  y="312" class="xs">build state</text>
+  <text x="320"  y="292" class="ts">detect</text>
+  <text x="320"  y="312" class="xs">stockouts · outages</text>
+  <text x="320"  y="328" class="xs">routes · anomalies</text>
+  <text x="480"  y="292" class="ts">forecast</text>
+  <text x="480"  y="312" class="xs">structural profile</text>
+  <text x="480"  y="328" class="xs" style="fill:#58a6ff">5.1% WAPE</text>
+  <text x="640"  y="292" class="ts">risk projection</text>
+  <text x="640"  y="312" class="xs">8 h horizon</text>
+  <text x="640"  y="328" class="xs">shortage probability</text>
+  <text x="800"  y="292" class="ts">greedy planner</text>
+  <text x="800"  y="312" class="xs">marginal benefit</text>
+  <text x="800"  y="328" class="xs">joint constraints</text>
+  <text x="960"  y="292" class="ts">validator</text>
+  <text x="960"  y="312" class="xs">independent</text>
+  <text x="960"  y="328" class="xs">no shared code</text>
+  <text x="1120" y="292" class="ts">explainable</text>
+  <text x="1120" y="312" class="xs">recommendations</text>
+  <text x="1120" y="328" class="xs">reasons · before/after</text>
+
+  <!-- storage -->
+  <g stroke="#bc8cff" stroke-width="2">
+    <line x1="420" y1="380" x2="420" y2="428" marker-end="url(#a-db)"/>
+    <line x1="860" y1="380" x2="860" y2="428" marker-end="url(#a-db)"/>
+  </g>
+  <path d="M290 442A130 12 0 0 1 550 442V518A130 12 0 0 1 290 518Z" fill="#bc8cff" fill-opacity=".12" stroke="#bc8cff"/>
+  <ellipse cx="420" cy="442" rx="130" ry="12" fill="#bc8cff" fill-opacity=".18" stroke="#bc8cff"/>
+  <text x="420" y="482" class="t">Redis</text>
+  <text x="420" y="503" class="s">hot state · pub/sub</text>
+
+  <path d="M730 442A130 12 0 0 1 990 442V518A130 12 0 0 1 730 518Z" fill="#bc8cff" fill-opacity=".12" stroke="#bc8cff"/>
+  <ellipse cx="860" cy="442" rx="130" ry="12" fill="#bc8cff" fill-opacity=".18" stroke="#bc8cff"/>
+  <text x="860" y="476" class="t">Neon Postgres</text>
+  <text x="860" y="496" class="s">recommendations · intents</text>
+  <text x="860" y="513" class="s">alerts · audit</text>
+
+  <!-- api -->
+  <g fill="none" stroke="#3fb950" stroke-width="2">
+    <path d="M420 530V560H560V590" marker-end="url(#a-api)"/>
+    <path d="M860 530V560H720V590" marker-end="url(#a-api)"/>
+  </g>
+  <rect x="380" y="590" width="520" height="100" rx="12" fill="#3fb950" fill-opacity=".12" stroke="#3fb950"/>
+  <text x="640" y="620" class="t">api · FastAPI ×N</text>
+  <text x="640" y="642" class="s">reads · approve / reject / cancel</text>
+  <text x="640" y="662" class="s">freshness gate → atomic claim → idempotency key</text>
+
+  <!-- approve rail back to simulator -->
+  <path d="M380 640H56V131H180" fill="none" stroke="#f0883e" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#a-sim)"/>
+  <text x="44" y="390" class="lbl" style="fill:#f0883e" transform="rotate(-90 44 390)">POST /v1/allocations · on approve</text>
+
+  <!-- web + operator -->
+  <line x1="640" y1="690" x2="640" y2="750" stroke="#39c5cf" stroke-width="2" marker-end="url(#a-web)"/>
+  <rect x="460" y="750" width="360" height="70" rx="12" fill="#39c5cf" fill-opacity=".12" stroke="#39c5cf"/>
+  <text x="640" y="780" class="t">web · React via nginx</text>
+  <text x="640" y="801" class="s">SSE push + 1 s polling</text>
+
+  <line x1="820" y1="785" x2="940" y2="785" stroke="#39c5cf" stroke-width="2" marker-end="url(#a-web)"/>
+  <rect x="940" y="760" width="160" height="50" rx="25" fill="#e6edf3" fill-opacity=".06" stroke="#e6edf3" stroke-opacity=".6"/>
+  <circle cx="976" cy="778" r="6" fill="none" stroke="#e6edf3" stroke-width="1.8"/>
+  <path d="M965 797a11 9 0 0 1 22 0" fill="none" stroke="#e6edf3" stroke-width="1.8"/>
+  <text x="1036" y="790" class="t">operator</text>
+
+  <!-- metrics to observability -->
+  <path d="M420 690V880" fill="none" stroke="#f778ba" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#a-obs)"/>
+  <text x="410" y="790" class="lbl" style="text-anchor:end;fill:#f778ba">metrics · logs · health</text>
+
+  <!-- observability -->
+  <rect x="80" y="880" width="540" height="170" rx="16" fill="#f778ba" fill-opacity=".05" stroke="#f778ba" stroke-opacity=".55"/>
+  <text x="100" y="908" class="h" style="fill:#f778ba">OBSERVABILITY</text>
+  <rect x="100" y="924" width="230" height="62" rx="10" fill="#f778ba" fill-opacity=".12" stroke="#f778ba"/>
+  <text x="215" y="950" class="ts">Prometheus</text>
+  <text x="215" y="970" class="xs">scrapes api + worker metrics</text>
+  <line x1="330" y1="955" x2="370" y2="955" stroke="#f778ba" stroke-width="2" marker-end="url(#a-obs)"/>
+  <rect x="370" y="924" width="230" height="62" rx="10" fill="#f778ba" fill-opacity=".12" stroke="#f778ba"/>
+  <text x="485" y="950" class="ts">Grafana</text>
+  <text x="485" y="970" class="xs">dashboards + alert rules</text>
+  <rect x="100" y="1000" width="230" height="34" rx="17" fill="none" stroke="#f778ba" stroke-opacity=".6"/>
+  <text x="215" y="1022" class="s">structlog JSON logs</text>
+  <rect x="370" y="1000" width="230" height="34" rx="17" fill="none" stroke="#f778ba" stroke-opacity=".6"/>
+  <text x="485" y="1022" class="s">health model</text>
+
+  <!-- ci/cd -->
+  <rect x="660" y="880" width="540" height="170" rx="16" fill="#d29922" fill-opacity=".05" stroke="#d29922" stroke-opacity=".55"/>
+  <text x="680" y="908" class="h" style="fill:#d29922">CI/CD <tspan class="hm">· GitHub Actions</tspan></text>
+  <g fill="#d29922" fill-opacity=".12" stroke="#d29922">
+    <rect x="677"  y="930" width="90" height="96" rx="10"/>
+    <rect x="781"  y="930" width="90" height="96" rx="10"/>
+    <rect x="885"  y="930" width="90" height="96" rx="10"/>
+    <rect x="989"  y="930" width="90" height="96" rx="10"/>
+    <rect x="1093" y="930" width="90" height="96" rx="10"/>
+  </g>
+  <g stroke="#d29922" stroke-width="2">
+    <line x1="767"  y1="978" x2="781"  y2="978" marker-end="url(#a-ci)"/>
+    <line x1="871"  y1="978" x2="885"  y2="978" marker-end="url(#a-ci)"/>
+    <line x1="975"  y1="978" x2="989"  y2="978" marker-end="url(#a-ci)"/>
+    <line x1="1079" y1="978" x2="1093" y2="978" marker-end="url(#a-ci)"/>
+  </g>
+  <text x="722"  y="970" class="ts">lint</text>
+  <text x="722"  y="990" class="xs">+ tests</text>
+  <text x="826"  y="962" class="ts">integration</text>
+  <text x="826"  y="982" class="xs">compose, e2e</text>
+  <text x="826"  y="998" class="xs">Playwright, k6</text>
+  <text x="930"  y="970" class="ts">package</text>
+  <text x="930"  y="990" class="xs">GHCR</text>
+  <text x="1034" y="982" class="ts">deploy</text>
+  <text x="1138" y="970" class="ts">verify</text>
+  <text x="1138" y="990" class="xs">health check</text>
+</svg>

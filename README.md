@@ -27,6 +27,13 @@ run, reset, inject crisis scenarios or faults.
 
 ## Architecture (modular monolith: one image, two roles)
 
+<p align="center">
+  <img src="docs/architecture.svg" alt="EnergonPrime architecture diagram" width="100%">
+</p>
+
+<details>
+<summary>Mermaid source</summary>
+
 ```mermaid
 flowchart TD
     SIM["BUP Simulator 1.0.0<br/>(REST truth + SSE hint)"]
@@ -61,6 +68,8 @@ flowchart TD
     end
     OPR ~~~ CICD
 ```
+
+</details>
 
 ```
 BUP Simulator 1.0.0 (REST truth + SSE hint)
