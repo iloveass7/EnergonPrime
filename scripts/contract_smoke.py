@@ -64,7 +64,7 @@ def envelope_code(body: Any) -> str | None:
     return None
 
 
-def is_stale(headers: Mapping[str, str]) -> bool:
+def is_stale(headers: Mapping[str, str | None]) -> bool:
     """True when the stale-data header is present with value ``true`` (any case)."""
     value = headers.get("x-simulator-stale")
     return value is not None and value.strip().lower() == "true"
@@ -417,9 +417,79 @@ async def section_preflight(ctx: SmokeContext) -> None:
     }
 
 
+def _is_list(ex: Exchange) -> bool:
+    return ex.status == 200 and isinstance(ex.body, list)
+
+
+async def section_reads(ctx: SmokeContext) -> None:
+    tick = await ctx.step(4)
+    ctx.check("admin_steps_advance_ticks", tick == 4, f"tick after 4 steps = {tick}")
+    if ctx.sse is not None:
+        ok = await ctx.sse.wait_for(event="simulation.tick", at_least=4, timeout_s=3.0)
+        ctx.check("sse_tick_after_step", ok, f"{ctx.sse.count('simulation.tick')} tick events")
+
+    lists: dict[str, Exchange] = {}
+    for name, path in (
+        ("regions", "/v1/regions"),
+        ("depots", "/v1/depots"),
+        ("stations", "/v1/stations"),
+        ("routes", "/v1/routes"),
+        ("supply_arrivals", "/v1/supply-arrivals"),
+        ("events_initial", "/v1/events"),
+        ("allocations_initial", "/v1/allocations"),
+    ):
+        ex = lists[name] = await ctx.call(name, "GET", path)
+        ctx.check(name, _is_list(ex), f"got {ex.status} {type(ex.body).__name__}")
+    for name in ("regions", "depots", "stations", "routes"):
+        ctx.check(f"{name}_non_empty", bool(lists[name].body), "empty list")
+    ctx.check("stale_header_absent_baseline", not is_stale(lists["depots"].headers), "stale on baseline")
+    ctx.topology = {
+        kind: {item["id"]: item for item in lists[kind].body or []}
+        for kind in ("depots", "stations", "routes")
+    }
+
+    metrics = await ctx.call("metrics_initial", "GET", "/v1/metrics")
+    ctx.check("metrics_initial", metrics.status == 200 and isinstance(metrics.body, dict), f"{metrics.status}")
+    inst = await ctx.call("instance_after_steps", "GET", "/v1/instance")
+    inst_tick = inst.body.get("tick") if isinstance(inst.body, dict) else None
+    ctx.check("instance_after_steps", inst.status == 200 and inst_tick == 4, f"tick {inst_tick}")
+
+    for kind, singular in (("depots", "depot"), ("stations", "station")):
+        first_id = next(iter(ctx.topology[kind]))
+        one = await ctx.call(f"{singular}_by_id", "GET", f"/v1/{kind}/{first_id}")
+        ctx.check(
+            f"{singular}_by_id",
+            one.status == 200 and isinstance(one.body, dict) and one.body.get("id") == first_id,
+            f"got {one.status}",
+        )
+        ctx.expect(
+            await ctx.call(f"{singular}_unknown_404", "GET", f"/v1/{kind}/does-not-exist"),
+            404,
+            "NOT_FOUND",
+        )
+
+    station_id = next(iter(ctx.topology["stations"]))
+    hist = await ctx.call(
+        "demand_history", "GET", "/v1/demand-history", params={"station_id": station_id, "limit": 12}
+    )
+    rows = hist.body if isinstance(hist.body, list) else []
+    ctx.check(
+        "demand_history",
+        _is_list(hist) and 0 < len(rows) <= 12 and all(r.get("station_id") == station_id for r in rows),
+        f"got {hist.status} with {len(rows)} rows",
+    )
+    over = await ctx.call("demand_history_limit_over", "GET", "/v1/demand-history", params={"limit": 2001})
+    ctx.manifest["findings"]["demand_history_limit_2001"] = {
+        "status": over.status,
+        "rows": len(over.body) if isinstance(over.body, list) else None,
+        "code": envelope_code(over.body),
+    }
+
+
 Section = Callable[[SmokeContext], Awaitable[None]]
 SECTIONS: list[tuple[str, Section]] = [
     ("preflight", section_preflight),
+    ("reads", section_reads),
 ]
 
 
@@ -502,7 +572,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
-    parser.add_argument("--section", action="append", dest="sections", metavar="NAME")
+    parser.add_argument(
+        "--section", action="append", dest="sections", choices=[n for n, _ in SECTIONS]
+    )
     args = parser.parse_args(argv)
 
     meta = {
