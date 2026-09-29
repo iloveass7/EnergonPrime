@@ -2,7 +2,8 @@
 
 Workload: `load/k6_api.js`, operator read mix (40% dashboard, 20% risk, 15% recommendations,
 10% station detail, 5% kpi, 5% system status, 5% allocations), 0–0.5 s think time.
-Target: the containerised API (`docker compose`, API_WORKERS=2) at git `a453548` + uncommitted-free tree.
+Target: the containerised API (`docker compose`, API_WORKERS=2), images built from the working tree
+that was committed as `7f765d7` immediately after the run.
 Machine: Apple M4, 16 GB RAM; Docker VM 4 CPUs / 5.8 GB. All data simulated.
 
 | Profile | VUs | Requests | Throughput | avg | p50 | p95 | p99 | max | Errors |
