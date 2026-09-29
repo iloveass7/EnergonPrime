@@ -1,0 +1,46 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_replay",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations",
+    "query": {},
+    "body": {
+      "idempotency_key": "p0-create-1",
+      "source_depot_id": "depot-gazipur",
+      "destination_station_id": "station-mirpur",
+      "route_id": "route-gazipur-mirpur",
+      "fuel_type": "DIESEL",
+      "quantity": 1000
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "content-length": "325",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "id": 1,
+      "idempotency_key": "p0-create-1",
+      "source_depot_id": "depot-gazipur",
+      "destination_station_id": "station-mirpur",
+      "route_id": "route-gazipur-mirpur",
+      "fuel_type": "DIESEL",
+      "quantity": 1000.0,
+      "created_tick": 4,
+      "departure_tick": null,
+      "expected_arrival_tick": null,
+      "actual_arrival_tick": null,
+      "status": "PENDING",
+      "failure_reason": null
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 2.2
+}

@@ -1,0 +1,37 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_unknown_depot_404",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations",
+    "query": {},
+    "body": {
+      "idempotency_key": "p0-404-1",
+      "source_depot_id": "does-not-exist",
+      "destination_station_id": "station-mirpur",
+      "route_id": "route-gazipur-mirpur",
+      "fuel_type": "DIESEL",
+      "quantity": 1000
+    }
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-length": "66",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "NOT_FOUND",
+        "message": "Source depot not found"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 2.7
+}

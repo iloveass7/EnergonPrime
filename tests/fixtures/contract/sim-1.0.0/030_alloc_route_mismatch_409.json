@@ -1,0 +1,37 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_route_mismatch_409",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations",
+    "query": {},
+    "body": {
+      "idempotency_key": "p0-mismatch-1",
+      "source_depot_id": "depot-gazipur",
+      "destination_station_id": "station-tongi",
+      "route_id": "route-gazipur-mirpur",
+      "fuel_type": "DIESEL",
+      "quantity": 1000
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-length": "98",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "ROUTE_MISMATCH",
+        "message": "Route does not connect selected depot and station"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 2.6
+}

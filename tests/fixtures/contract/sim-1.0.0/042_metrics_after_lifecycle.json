@@ -1,0 +1,31 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "metrics_after_lifecycle",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/metrics",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "129",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "served_demand_liters": 5137.285,
+      "unmet_demand_liters": 0.0,
+      "service_level": 1.0,
+      "allocation_liters": 500.0,
+      "allocation_failures": 0
+    },
+    "body_text": null
+  },
+  "sim_tick": 8,
+  "elapsed_ms": 2.7
+}

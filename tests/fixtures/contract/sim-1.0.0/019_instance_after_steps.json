@@ -1,0 +1,34 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "instance_after_steps",
+  "section": "reads",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/instance",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "149",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "id": 1,
+      "scenario_id": "baseline",
+      "scenario_version": "1.0",
+      "seed": 12345,
+      "sim_time": "2026-01-01T01:00:00",
+      "tick": 4,
+      "tick_minutes": 15,
+      "status": "PAUSED"
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 2.2
+}

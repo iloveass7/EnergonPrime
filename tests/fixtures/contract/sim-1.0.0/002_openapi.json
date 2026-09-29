@@ -1,0 +1,861 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "openapi",
+  "section": "preflight",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/openapi.json",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "10377",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "openapi": "3.1.0",
+      "info": {
+        "title": "Fuel Supply Simulator",
+        "description": "Deterministic local fuel-supply simulation environment.",
+        "version": "1.0.0"
+      },
+      "paths": {
+        "/": {
+          "get": {
+            "summary": "Root",
+            "operationId": "root__get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/health": {
+          "get": {
+            "summary": "Health",
+            "operationId": "health_v1_health_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/instance": {
+          "get": {
+            "summary": "Instance",
+            "operationId": "instance_v1_instance_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/regions": {
+          "get": {
+            "summary": "Regions",
+            "operationId": "regions_v1_regions_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/depots": {
+          "get": {
+            "summary": "Depots",
+            "operationId": "depots_v1_depots_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/depots/{entity_id}": {
+          "get": {
+            "summary": "Depot",
+            "operationId": "depot_v1_depots__entity_id__get",
+            "parameters": [
+              {
+                "name": "entity_id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "title": "Entity Id"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              },
+              "422": {
+                "description": "Validation Error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/stations": {
+          "get": {
+            "summary": "Stations",
+            "operationId": "stations_v1_stations_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/stations/{entity_id}": {
+          "get": {
+            "summary": "Station",
+            "operationId": "station_v1_stations__entity_id__get",
+            "parameters": [
+              {
+                "name": "entity_id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "title": "Entity Id"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              },
+              "422": {
+                "description": "Validation Error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/routes": {
+          "get": {
+            "summary": "Routes",
+            "operationId": "routes_v1_routes_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/supply-arrivals": {
+          "get": {
+            "summary": "Supplies",
+            "operationId": "supplies_v1_supply_arrivals_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/events": {
+          "get": {
+            "summary": "Events",
+            "operationId": "events_v1_events_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/allocations": {
+          "get": {
+            "summary": "Allocations",
+            "operationId": "allocations_v1_allocations_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "post": {
+            "summary": "Create Allocation",
+            "operationId": "create_allocation_v1_allocations_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AllocationCreate"
+                  }
+                }
+              },
+              "required": true
+            },
+            "responses": {
+              "201": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              },
+              "422": {
+                "description": "Validation Error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/demand-history": {
+          "get": {
+            "summary": "Demand History",
+            "operationId": "demand_history_v1_demand_history_get",
+            "parameters": [
+              {
+                "name": "station_id",
+                "in": "query",
+                "required": false,
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Station Id"
+                }
+              },
+              {
+                "name": "limit",
+                "in": "query",
+                "required": false,
+                "schema": {
+                  "type": "integer",
+                  "default": 200,
+                  "title": "Limit"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              },
+              "422": {
+                "description": "Validation Error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/metrics": {
+          "get": {
+            "summary": "Metrics",
+            "operationId": "metrics_v1_metrics_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/allocations/{allocation_id}/cancel": {
+          "post": {
+            "summary": "Cancel Allocation",
+            "operationId": "cancel_allocation_v1_allocations__allocation_id__cancel_post",
+            "parameters": [
+              {
+                "name": "allocation_id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                  "type": "integer",
+                  "title": "Allocation Id"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              },
+              "422": {
+                "description": "Validation Error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/v1/stream": {
+          "get": {
+            "summary": "Stream",
+            "operationId": "stream_v1_stream_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/run": {
+          "post": {
+            "summary": "Admin Run",
+            "operationId": "admin_run_admin_run_post",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/pause": {
+          "post": {
+            "summary": "Admin Pause",
+            "operationId": "admin_pause_admin_pause_post",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/toggle": {
+          "post": {
+            "summary": "Admin Toggle",
+            "description": "Flip the simulation between RUNNING and PAUSED.",
+            "operationId": "admin_toggle_admin_toggle_post",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/step": {
+          "post": {
+            "summary": "Admin Step",
+            "operationId": "admin_step_admin_step_post",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/reset": {
+          "post": {
+            "summary": "Admin Reset",
+            "operationId": "admin_reset_admin_reset_post",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/events": {
+          "get": {
+            "summary": "Admin List Events",
+            "operationId": "admin_list_events_admin_events_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "post": {
+            "summary": "Admin Event",
+            "operationId": "admin_event_admin_events_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/EventCreate"
+                  }
+                }
+              },
+              "required": true
+            },
+            "responses": {
+              "201": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              },
+              "422": {
+                "description": "Validation Error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/faults": {
+          "get": {
+            "summary": "Admin List Faults",
+            "operationId": "admin_list_faults_admin_faults_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          },
+          "post": {
+            "summary": "Admin Fault",
+            "operationId": "admin_fault_admin_faults_post",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/FaultCreate"
+                  }
+                }
+              },
+              "required": true
+            },
+            "responses": {
+              "201": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              },
+              "422": {
+                "description": "Validation Error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/faults/clear": {
+          "post": {
+            "summary": "Clear Faults",
+            "operationId": "clear_faults_admin_faults_clear_post",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/audit": {
+          "get": {
+            "summary": "Admin Audit",
+            "operationId": "admin_audit_admin_audit_get",
+            "parameters": [
+              {
+                "name": "limit",
+                "in": "query",
+                "required": false,
+                "schema": {
+                  "type": "integer",
+                  "default": 200,
+                  "title": "Limit"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              },
+              "422": {
+                "description": "Validation Error",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin/stats": {
+          "get": {
+            "summary": "Admin Stats",
+            "description": "Return row counts and DB file size for the 'data stored' panel.",
+            "operationId": "admin_stats_admin_stats_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "application/json": {
+                    "schema": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/admin": {
+          "get": {
+            "summary": "Admin Page",
+            "operationId": "admin_page_admin_get",
+            "responses": {
+              "200": {
+                "description": "Successful Response",
+                "content": {
+                  "text/html": {
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components": {
+        "schemas": {
+          "AllocationCreate": {
+            "properties": {
+              "idempotency_key": {
+                "type": "string",
+                "maxLength": 150,
+                "minLength": 1,
+                "title": "Idempotency Key"
+              },
+              "source_depot_id": {
+                "type": "string",
+                "title": "Source Depot Id"
+              },
+              "destination_station_id": {
+                "type": "string",
+                "title": "Destination Station Id"
+              },
+              "route_id": {
+                "type": "string",
+                "title": "Route Id"
+              },
+              "fuel_type": {
+                "type": "string",
+                "enum": [
+                  "DIESEL",
+                  "PETROL",
+                  "OCTANE"
+                ],
+                "title": "Fuel Type"
+              },
+              "quantity": {
+                "type": "number",
+                "exclusiveMinimum": 0.0,
+                "title": "Quantity"
+              }
+            },
+            "type": "object",
+            "required": [
+              "idempotency_key",
+              "source_depot_id",
+              "destination_station_id",
+              "route_id",
+              "fuel_type",
+              "quantity"
+            ],
+            "title": "AllocationCreate"
+          },
+          "EventCreate": {
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "demand_spike",
+                  "shipment_delay",
+                  "route_disruption",
+                  "station_outage",
+                  "depot_constraint",
+                  "supply_shortfall"
+                ],
+                "title": "Type"
+              },
+              "start_tick": {
+                "type": "integer",
+                "minimum": 0.0,
+                "title": "Start Tick"
+              },
+              "duration_ticks": {
+                "type": "integer",
+                "exclusiveMinimum": 0.0,
+                "title": "Duration Ticks"
+              },
+              "parameters": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Parameters"
+              }
+            },
+            "type": "object",
+            "required": [
+              "type",
+              "start_tick",
+              "duration_ticks"
+            ],
+            "title": "EventCreate"
+          },
+          "FaultCreate": {
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "latency",
+                  "unavailable",
+                  "error_rate",
+                  "stale_data",
+                  "stream_disconnect"
+                ],
+                "title": "Type"
+              },
+              "duration_seconds": {
+                "type": "integer",
+                "maximum": 3600.0,
+                "exclusiveMinimum": 0.0,
+                "title": "Duration Seconds"
+              },
+              "parameters": {
+                "additionalProperties": true,
+                "type": "object",
+                "title": "Parameters"
+              }
+            },
+            "type": "object",
+            "required": [
+              "type",
+              "duration_seconds"
+            ],
+            "title": "FaultCreate"
+          },
+          "HTTPValidationError": {
+            "properties": {
+              "detail": {
+                "items": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "type": "array",
+                "title": "Detail"
+              }
+            },
+            "type": "object",
+            "title": "HTTPValidationError"
+          },
+          "ValidationError": {
+            "properties": {
+              "loc": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array",
+                "title": "Location"
+              },
+              "msg": {
+                "type": "string",
+                "title": "Message"
+              },
+              "type": {
+                "type": "string",
+                "title": "Error Type"
+              }
+            },
+            "type": "object",
+            "required": [
+              "loc",
+              "msg",
+              "type"
+            ],
+            "title": "ValidationError"
+          }
+        }
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": null,
+  "elapsed_ms": 13.3
+}

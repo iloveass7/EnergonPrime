@@ -1,0 +1,37 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_route_capacity_409",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations",
+    "query": {},
+    "body": {
+      "idempotency_key": "p0-cap-1",
+      "source_depot_id": "depot-gazipur",
+      "destination_station_id": "station-mirpur",
+      "route_id": "route-gazipur-mirpur",
+      "fuel_type": "DIESEL",
+      "quantity": 7001.0
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-length": "93",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "ROUTE_CAPACITY_EXCEEDED",
+        "message": "Quantity exceeds route max shipment"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 2.6
+}

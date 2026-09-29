@@ -1,0 +1,30 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "instance_unavailable_503",
+  "section": "faults",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/instance",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 503,
+    "headers": {
+      "content-length": "86",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "error": {
+        "code": "FAULT_INJECTED",
+        "message": "Simulator API temporarily unavailable."
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 14,
+  "elapsed_ms": 1.0
+}

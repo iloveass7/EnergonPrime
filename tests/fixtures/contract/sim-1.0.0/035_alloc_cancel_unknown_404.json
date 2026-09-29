@@ -1,0 +1,29 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_cancel_unknown_404",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations/999999/cancel",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-length": "42",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "ALLOCATION_NOT_FOUND"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 1.6
+}

@@ -1,0 +1,28 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "admin_step_13",
+  "section": "events",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/admin/step",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "44",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "tick": 13,
+      "sim_time": "2026-01-01T03:15:00"
+    },
+    "body_text": null
+  },
+  "sim_tick": 12,
+  "elapsed_ms": 17.0
+}

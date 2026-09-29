@@ -1,0 +1,32 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "health",
+  "section": "preflight",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/health",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "73",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "status": "ok",
+      "database": "ok",
+      "simulation": {
+        "status": "PAUSED",
+        "tick": 0
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": null,
+  "elapsed_ms": 2.2
+}

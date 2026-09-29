@@ -1,0 +1,30 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_cancel_again_409",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations/1/cancel",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-length": "89",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "CANNOT_CANCEL",
+        "message": "Only pending allocations can be cancelled"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 2.0
+}

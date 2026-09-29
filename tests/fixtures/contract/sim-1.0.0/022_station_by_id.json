@@ -1,0 +1,42 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "station_by_id",
+  "section": "reads",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/stations/station-mirpur",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "274",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "id": "station-mirpur",
+      "name": "Mirpur Fuel Station",
+      "region_id": "region-dhaka",
+      "status": "OPEN",
+      "demand_profile": "urban_high",
+      "demand_multiplier": 1.0,
+      "capacity": {
+        "DIESEL": 15000,
+        "PETROL": 14000,
+        "OCTANE": 9000
+      },
+      "inventory": {
+        "DIESEL": 8760.027,
+        "PETROL": 8690.029,
+        "OCTANE": 4838.437
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 2.7
+}

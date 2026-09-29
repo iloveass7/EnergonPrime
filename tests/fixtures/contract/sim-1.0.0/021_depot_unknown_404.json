@@ -1,0 +1,29 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "depot_unknown_404",
+  "section": "reads",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/depots/does-not-exist",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 404,
+    "headers": {
+      "content-length": "31",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "NOT_FOUND"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 2.0
+}

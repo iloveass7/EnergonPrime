@@ -1,0 +1,224 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "supply_arrivals",
+  "section": "reads",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/supply-arrivals",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "3182",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": [
+      {
+        "id": "supply-001",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "DIESEL",
+        "quantity": 18000.0,
+        "planned_tick": 12,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-003",
+        "depot_id": "depot-patiya",
+        "fuel_type": "DIESEL",
+        "quantity": 16000.0,
+        "planned_tick": 14,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-002",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "PETROL",
+        "quantity": 14000.0,
+        "planned_tick": 16,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-004",
+        "depot_id": "depot-patiya",
+        "fuel_type": "OCTANE",
+        "quantity": 9000.0,
+        "planned_tick": 20,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-101",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "DIESEL",
+        "quantity": 12000.0,
+        "planned_tick": 64,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-102",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "PETROL",
+        "quantity": 10000.0,
+        "planned_tick": 68,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-103",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "OCTANE",
+        "quantity": 7000.0,
+        "planned_tick": 72,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-104",
+        "depot_id": "depot-patiya",
+        "fuel_type": "DIESEL",
+        "quantity": 10000.0,
+        "planned_tick": 76,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-105",
+        "depot_id": "depot-patiya",
+        "fuel_type": "PETROL",
+        "quantity": 8000.0,
+        "planned_tick": 80,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-106",
+        "depot_id": "depot-patiya",
+        "fuel_type": "OCTANE",
+        "quantity": 6000.0,
+        "planned_tick": 84,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-201",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "DIESEL",
+        "quantity": 12000.0,
+        "planned_tick": 128,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-202",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "PETROL",
+        "quantity": 10000.0,
+        "planned_tick": 132,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-203",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "OCTANE",
+        "quantity": 7000.0,
+        "planned_tick": 136,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-204",
+        "depot_id": "depot-patiya",
+        "fuel_type": "DIESEL",
+        "quantity": 10000.0,
+        "planned_tick": 140,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-205",
+        "depot_id": "depot-patiya",
+        "fuel_type": "PETROL",
+        "quantity": 8000.0,
+        "planned_tick": 144,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-206",
+        "depot_id": "depot-patiya",
+        "fuel_type": "OCTANE",
+        "quantity": 6000.0,
+        "planned_tick": 148,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-301",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "DIESEL",
+        "quantity": 12000.0,
+        "planned_tick": 192,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-302",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "PETROL",
+        "quantity": 10000.0,
+        "planned_tick": 196,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-303",
+        "depot_id": "depot-gazipur",
+        "fuel_type": "OCTANE",
+        "quantity": 7000.0,
+        "planned_tick": 200,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-304",
+        "depot_id": "depot-patiya",
+        "fuel_type": "DIESEL",
+        "quantity": 10000.0,
+        "planned_tick": 204,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-305",
+        "depot_id": "depot-patiya",
+        "fuel_type": "PETROL",
+        "quantity": 8000.0,
+        "planned_tick": 208,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      },
+      {
+        "id": "supply-306",
+        "depot_id": "depot-patiya",
+        "fuel_type": "OCTANE",
+        "quantity": 6000.0,
+        "planned_tick": 212,
+        "actual_tick": null,
+        "status": "SCHEDULED"
+      }
+    ],
+    "body_text": null
+  },
+  "sim_tick": 4,
+  "elapsed_ms": 3.7
+}
