@@ -6,11 +6,11 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     # API + runtime (architect.md §2.2, §8)
     "fastapi",
-    "uvicorn[standard]",          # uvloop + httptools
+    "uvicorn[standard]", # uvloop + httptools
     "pydantic>=2",
     "pydantic-settings",
     "orjson",
-    "sse-starlette",              # /api/v1/stream
+    "sse-starlette", # /api/v1/stream
     # Simulator client (REST + SSE)
     "httpx",
     "httpx-sse",
@@ -28,6 +28,7 @@ dependencies = [
     # LLM gateway (prd.md F-INT-LLM: Gemini primary, Groq backup)
     "google-genai",
     "groq",
+    "aiosqlite>=0.22.1",
 ]
 
 [dependency-groups]
@@ -40,9 +41,20 @@ dev = [
     "mypy",
     "import-linter",
     "pip-audit",
+    "fakeredis>=2.38.0",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "--strict-markers"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Body"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
