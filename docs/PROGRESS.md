@@ -11,8 +11,8 @@ Phases from `docs/pipeline.md` §14. Each phase is ticked only when its "done wh
 | [~] | 4 Intelligence | property tests + evaluation artifact (WAPE, coverage) | profile WAPE 5.1% live; coverage + rolling-origin artifact pending | `/api/v1/intelligence` |
 | [x] | 5 Decide & act | risk → approve → ARRIVED with one allocation; duplicate test passes | done 2026-09-29 (12/12) | `scripts/e2e_smoke.py` |
 | [~] | 6 Crisis & resilience | scenarios B–K pass | stale/unavailable/reset/SSE verified live; scripted B–K suite pending | test-plane scenarios in UI |
-| [~] | 7 Platform | clean-machine `make up` + `ci-success` green | `make up` healthy locally (5/5 containers); CI written, not yet run on GitHub | `docker-compose.yml`, `.github/workflows/ci.yml` |
-| [~] | 8 Performance & security | load and security reports with actuals | load done (normal + stress); spike/soak + security scan pending | `evidence/phase-8/README.md` |
+| [~] | 7 Platform | clean-machine `make up` + `ci-success` green | done 2026-09-29: 5/5 healthy on Neon Postgres; CI green on GitHub | `docker-compose.yml`, `.github/workflows/ci.yml` |
+| [~] | 8 Performance & security | load and security reports with actuals | load done (normal + stress); security audit clean (`evidence/security/`); spike/soak pending | `evidence/phase-8/README.md` |
 | [ ] | 9 Competitive extras | each beats or matches the baseline, else disabled | not started | |
 | [ ] | 10 Demo freeze | two consecutive clean timed runs | not started | |
 
@@ -37,5 +37,5 @@ uv run python scripts/contract_smoke.py --out /tmp/p0-rerun --compare-to tests/f
 
 - Phase 4: rolling-origin evaluation artifact (WAPE by horizon, interval coverage) + property tests.
 - Phase 6: scripted scenario suite B–K (`scripts/run_scenarios.py`) with evidence per scenario.
-- Phase 7: push to GitHub and get `ci-success` green; set `DATABASE_URL` to Neon.
-- Phase 8: k6 spike/soak, fault-under-load, security scan (pip-audit, npm audit).
+- Phase 8: k6 spike/soak, fault-under-load.
+- Resilience: Redis down verified (`evidence/resilience/`); Postgres down, SSE drop, ambiguous POST still untested.

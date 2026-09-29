@@ -76,7 +76,7 @@ the admin test plane. Design docs: `docs/pipeline.md` (authoritative), `docs/arc
 | `error_rate` / `latency` | retries with jitter; latency shows as degraded, not errors | unit + contract |
 | SSE drop | 1 s polling continues; reconnect → full REST resync | implemented, not yet scripted |
 | ambiguous POST (timeout/503) | reconcile via `GET /v1/allocations` before one same-key retry | implemented, not yet fault-tested |
-| Redis down | API serves its last good copy; worker keeps refreshing standalone | implemented, not yet tested |
+| Redis down | API serves its last good copy (HTTP 200), health → degraded; auto-recovers on restart | live (`evidence/resilience/`) |
 | Postgres down | reads continue; reported in health | implemented, not yet tested |
 
 ## Evidence
@@ -85,6 +85,9 @@ the admin test plane. Design docs: `docs/pipeline.md` (authoritative), `docs/arc
 - `scripts/e2e_smoke.py` — risk → recommendation → 3 concurrent approvals → one allocation → ARRIVED,
   stale blocks approval, recovery (12/12)
 - `evidence/phase-8/` — k6: 50 VUs p95 4.1 ms; 500 VUs 1,040 req/s p95 5.0 ms p99 27 ms, 0 errors
+- `evidence/resilience/` — Redis outage: degraded → last-good state served → auto-recovery
+- `evidence/security/` — npm audit + pip-audit: 0 known vulnerabilities
+- `docs/DEMO.md` — judge demo run-sheet
 - `make test` (53 unit/contract tests), `make lint` (ruff, mypy, import-linter, tsc), `make ui-test` (Playwright)
 
 ## Development

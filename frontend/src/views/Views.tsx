@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ApiError, api, fmt, type Dashboard, type Level } from "../api";
-import { AllocStatus, Bar, Empty, LevelBadge, Section, Stat, StatusPill } from "../ui";
+import { AllocStatus, Bar, Empty, LevelBadge, Section, Stat, StatStrip, StatusPill } from "../ui";
 import { RecommendationCard, useRecReview } from "./Recommendations";
 
 const FUELS = ["DIESEL", "PETROL", "OCTANE"];
@@ -12,17 +12,17 @@ export function CommandCenter({ d }: { d: Dashboard }) {
   const [review, dialog] = useRecReview(d.recommendations, d.execution_blocked);
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <StatStrip className="grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         <Stat label="Service level" value={fmt.pct(k.service_level, 2)} tone={k.service_level >= 0.99 ? "good" : k.service_level >= 0.95 ? "warn" : "bad"} hint="served / (served + unmet)" />
         <Stat label="Unmet demand" value={fmt.l(k.unmet_demand_liters)} tone={k.unmet_demand_liters > 0 ? "bad" : "good"} hint="since simulation start" />
         <Stat label="Critical / high risk" value={`${k.risk_counts.CRITICAL} / ${k.risk_counts.HIGH}`} tone={k.risk_counts.CRITICAL ? "bad" : k.risk_counts.HIGH ? "warn" : "good"} hint="of 12 station-fuel keys" />
         <Stat label="Open alerts" value={k.open_alerts} tone={k.open_alerts ? "warn" : "good"} />
         <Stat label="Recommendations" value={k.active_recommendations} hint="awaiting operator" />
         <Stat label="Shipped" value={fmt.l(k.allocation_liters)} hint={`${k.allocation_failures} failed allocations`} tone={k.allocation_failures ? "warn" : undefined} />
-      </div>
+      </StatStrip>
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="space-y-4 xl:col-span-2">
-          <Section title="Top risks (next 8 simulated hours)">
+          <Section title="Top risks" sub="Next 8 simulated hours, model-estimated">
             {top.length === 0 ? <Empty>No station-fuel key above LOW risk.</Empty> : (
               <table className="w-full">
                 <thead><tr><th>Level</th><th>Station</th><th>Fuel</th><th>Inventory</th><th>Stockout</th><th>Expected unmet</th><th>Risk</th><th>Why</th></tr></thead>
@@ -204,12 +204,12 @@ export function HealthView({ d }: { d: Dashboard }) {
   const intel = d.intelligence;
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-4">
+      <StatStrip className="md:grid-cols-4">
         <Stat label="Overall" value={st ? <StatusPill status={st.overall} /> : "…"} />
         <Stat label="API p95 latency" value={st?.p95_latency_ms != null ? `${st.p95_latency_ms} ms` : "—"} hint={`${st?.requests_60s ?? 0} requests / 60 s`} />
         <Stat label="API error rate" value={st?.error_rate != null ? fmt.pct(st.error_rate, 2) : "—"} />
         <Stat label="Data age" value={st?.data_age_s != null ? `${st.data_age_s} s` : "—"} tone={st?.data_age_s != null && st.data_age_s > 5 ? "warn" : "good"} />
-      </div>
+      </StatStrip>
       <Section title="Components">
         <table className="w-full">
           <tbody>{st && Object.entries(st.components).map(([name, c]) => (
@@ -219,12 +219,12 @@ export function HealthView({ d }: { d: Dashboard }) {
         {st && st.degraded.length > 0 && <div className="mt-3 text-sm text-amber-200">Degraded: {st.degraded.join(", ")}</div>}
       </Section>
       <Section title="Intelligence">
-        <div className="grid gap-3 md:grid-cols-4">
+        <StatStrip className="md:grid-cols-4">
           <Stat label="Forecast model" value={<span className="text-base">{intel.model_version}</span>} hint={intel.method} />
           <Stat label="WAPE (last 24 h)" value={fmt.pct(intel.wape_overall, 1)} hint={FUELS.map((f) => `${f} ${fmt.pct(intel.wape_by_fuel[f], 1)}`).join(" · ")} />
           <Stat label="Planner" value={<span className="text-base">{intel.planner.policy}</span>} hint={`${intel.planner.duration_ms} ms per plan`} />
           <Stat label="Refresh" value={`${d.health.worker.refresh_ms} ms`} hint={`circuit ${d.health.simulator.circuit} · stream ${d.health.simulator.stream}`} />
-        </div>
+        </StatStrip>
       </Section>
     </div>
   );
