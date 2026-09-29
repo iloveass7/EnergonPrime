@@ -29,6 +29,7 @@ class Leg:
     arrival_index: int
     unmet_before: float
     unmet_after: float
+    binding: str | None = None  # the limit that cut the leg below its sized need
 
     @property
     def benefit(self) -> float:
@@ -167,14 +168,13 @@ def plan_greedy(
                     arrival_index=arrival_index,
                     unmet_before=before,
                     unmet_after=float(unmet_after.sum()),
+                    binding=binding_name if cap < need else None,
                 )
                 if leg.benefit <= 0:
                     continue
                 result.alternatives.setdefault(alt_key, []).append(
                     Alternative(route.id, depot.id, leg.quantity, leg.unmet_after, "feasible")
                 )
-                if qty < need:
-                    result.binding[alt_key] = binding_name
                 if best is None or (leg.benefit, -leg.transit_ticks) > (
                     best.benefit,
                     -best.transit_ticks,

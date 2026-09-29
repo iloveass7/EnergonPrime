@@ -63,7 +63,7 @@ def build_recommendations(
             {"plan": "No new shipment", "projected_unmet_l": round(leg.unmet_before, 1),
              "risk": round(prob_before, 3), "binding_constraint": None, "why": "reference"},
             {"plan": f"Recommended: {leg.quantity:,.0f} L via {leg.route_id}", "projected_unmet_l": round(leg.unmet_after, 1),
-             "risk": round(prob_after, 3), "binding_constraint": plan.binding.get((leg.station_id, leg.fuel_type)),
+             "risk": round(prob_after, 3), "binding_constraint": leg.binding,
              "why": "largest projected unmet-liter reduction among feasible legs"},
         ]  # fmt: skip
         if runner is not None:
