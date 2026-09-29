@@ -67,6 +67,10 @@ services:
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      # Read-only when shared publicly: no login form, no basic auth (default admin/admin).
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3001/}
     volumes: ["./ops/grafana/provisioning:/etc/grafana/provisioning:ro", "./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro"]
     ports: ["3001:3000"]
 
