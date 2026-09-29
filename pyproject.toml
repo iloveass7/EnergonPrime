@@ -1,0 +1,43 @@
+[project]
+name = "fuelops"
+version = "0.1.0"
+description = "BUP Fuel Supply Operations Platform (api + worker)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    # API + runtime (architect.md §2.2, §8)
+    "fastapi",
+    "uvicorn[standard]",          # uvloop + httptools
+    "pydantic>=2",
+    "pydantic-settings",
+    "orjson",
+    "sse-starlette",              # /api/v1/stream
+    # Simulator client (REST + SSE)
+    "httpx",
+    "httpx-sse",
+    # Data: Redis hot state, Neon Postgres (pipeline.md §0.4)
+    "redis>=5",
+    "sqlalchemy[asyncio]>=2",
+    "asyncpg",
+    "alembic",
+    # Intelligence: structural profile forecast, greedy, HiGHS LP via scipy.optimize.linprog
+    "numpy",
+    "scipy",
+    # Observability
+    "structlog",
+    "prometheus-client",
+    # LLM gateway (prd.md F-INT-LLM: Gemini primary, Groq backup)
+    "google-genai",
+    "groq",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "hypothesis",
+    "ruff",
+    "mypy",
+    "import-linter",
+    "pip-audit",
+]
