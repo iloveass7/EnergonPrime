@@ -12,6 +12,7 @@ import argparse
 import asyncio
 import hashlib
 import json
+import math
 import subprocess
 import sys
 import time
@@ -34,6 +35,7 @@ DEFAULT_OUT = REPO_ROOT / "tests/fixtures/contract/sim-1.0.0"
 HEALTH_WAIT_S = 30.0
 SSE_RECONNECT_S = 0.5
 SSE_KEEPALIVE_WAIT_S = 20.0
+LATENCY_DELAY_MS = 300
 EVIDENCE_DIR = REPO_ROOT / "evidence/phase-0"
 SSE_EVENT_NAMES = (
     "simulation.tick",
@@ -55,10 +57,16 @@ REQUIRED_FIXTURES: tuple[str, ...] = (
     "alloc_route_mismatch_409", "alloc_route_capacity_409", "alloc_invalid_422",
     "alloc_cancel", "alloc_cancel_again_409", "alloc_cancel_unknown_404",
     "alloc_lifecycle_create", "allocations_after_lifecycle", "metrics_after_lifecycle",
+    "stations_before_capacity_probes", "depots_before_capacity_probes",
+    "alloc_destination_capacity_409", "alloc_dispatch_leg_1", "alloc_dispatch_capacity_409",
+    "alloc_dispatch_leg_1_cancel",
     # events
+    "admin_event_route_disruption_no_filter_key", "route_disruption_no_filter_key_during",
+    "admin_event_route_disruption_empty_filter", "route_disruption_empty_filter_during",
     "admin_event_route_disruption", "events_during_route_disruption",
-    "route_disruption_during", "admin_event_station_outage",
-    "events_during_station_outage", "station_outage_during", "events_list",
+    "route_disruption_during", "alloc_route_disrupted_409", "admin_event_station_outage",
+    "events_during_station_outage", "station_outage_during", "alloc_station_closed_409",
+    "events_list", "routes_after_events",
     # faults
     "admin_fault_stale_data", "depots_stale", "admin_faults_clear_stale_data",
     "depots_fresh", "admin_fault_unavailable", "instance_unavailable_503",
@@ -619,6 +627,67 @@ def other_station(
     )
 
 
+def _available_routes(
+    topology: Mapping[str, Mapping[str, dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    return [r for r in topology["routes"].values() if r.get("status") == "AVAILABLE"]
+
+
+def _headroom(
+    topology: Mapping[str, Mapping[str, dict[str, Any]]],
+    route: Mapping[str, Any],
+    fuel: str,
+) -> float:
+    station = topology["stations"][route["destination_station_id"]]
+    return float(station["capacity"][fuel] - station["inventory"][fuel])
+
+
+def destination_overflow(
+    topology: Mapping[str, Mapping[str, dict[str, Any]]], fuel: str
+) -> tuple[dict[str, Any], float]:
+    """A shipment 1 L over the destination's headroom that passes every earlier check."""
+    for route in _available_routes(topology):
+        depot = topology["depots"][route["source_depot_id"]]
+        qty = math.floor(_headroom(topology, route, fuel)) + 1
+        limit = min(
+            route["max_shipment"],
+            depot["inventory"][fuel],
+            depot["dispatch_capacity_per_tick"],
+        )
+        if 0 < qty <= limit:
+            return route, qty
+    raise SmokeAbort(
+        f"no route can overflow a station's {fuel} headroom within its limits"
+    )
+
+
+def dispatch_overflow(
+    topology: Mapping[str, Mapping[str, dict[str, Any]]], fuel: str
+) -> tuple[str, list[tuple[dict[str, Any], float]]]:
+    """Legs from one depot whose total first exceeds its per-tick dispatch capacity.
+
+    Every leg fits its route and destination; only the last one crosses the depot limit.
+    """
+    for depot_id, depot in topology["depots"].items():
+        legs: list[tuple[dict[str, Any], float]] = []
+        total = 0.0
+        for route in _available_routes(topology):
+            if route["source_depot_id"] != depot_id:
+                continue
+            qty = min(
+                route["max_shipment"], math.floor(_headroom(topology, route, fuel))
+            )
+            if qty < 1:
+                continue
+            legs.append((route, qty))
+            total += qty
+            if total > depot["dispatch_capacity_per_tick"]:
+                if total <= depot["inventory"][fuel]:
+                    return depot_id, legs
+                break
+    raise SmokeAbort(f"no depot can exceed its dispatch capacity with {fuel} legs")
+
+
 def mismatch_quantity(qty: float) -> float:
     """A different, still valid quantity for provoking IDEMPOTENCY_KEY_MISMATCH."""
     return qty / 2
@@ -761,6 +830,7 @@ async def section_allocations(ctx: SmokeContext) -> None:
     )
     metrics = await ctx.call("metrics_after_lifecycle", "GET", "/v1/metrics")
     ctx.check("metrics_after_lifecycle", metrics.status == 200, f"got {metrics.status}")
+    await _capacity_probes(ctx)
     if ctx.sse is not None:
         for name in ("allocation.status_changed", "inventory.updated"):
             ctx.check(
@@ -770,61 +840,203 @@ async def section_allocations(ctx: SmokeContext) -> None:
             )
 
 
+async def _capacity_probes(ctx: SmokeContext) -> None:
+    """Reproduce DESTINATION_ and DISPATCH_CAPACITY_EXCEEDED from freshly read inventory."""
+    world: dict[str, dict[str, dict[str, Any]]] = {"routes": ctx.topology["routes"]}
+    for kind in ("stations", "depots"):
+        ex = await ctx.call(f"{kind}_before_capacity_probes", "GET", f"/v1/{kind}")
+        world[kind] = {i["id"]: i for i in ex.body} if isinstance(ex.body, list) else {}
+
+    route, qty = destination_overflow(world, "DIESEL")
+    ctx.expect(
+        await ctx.call(
+            "alloc_destination_capacity_409",
+            "POST",
+            "/v1/allocations",
+            json=_alloc_body(route, "p0-dest-cap-1", qty),
+        ),
+        409,
+        "DESTINATION_CAPACITY_EXCEEDED",
+    )
+
+    depot_id, legs = dispatch_overflow(world, "DIESEL")
+    ctx.manifest["findings"]["dispatch_probe"] = {
+        "depot_id": depot_id,
+        "legs": [[r["id"], q] for r, q in legs],
+        "dispatch_capacity_per_tick": world["depots"][depot_id][
+            "dispatch_capacity_per_tick"
+        ],
+    }
+    accepted: list[Any] = []
+    for i, (leg_route, leg_qty) in enumerate(legs[:-1], start=1):
+        leg = await ctx.call(
+            f"alloc_dispatch_leg_{i}",
+            "POST",
+            "/v1/allocations",
+            json=_alloc_body(leg_route, f"p0-dispatch-{i}", leg_qty),
+        )
+        ctx.expect(leg, 201)
+        accepted.append(leg.body.get("id") if isinstance(leg.body, dict) else None)
+    last_route, last_qty = legs[-1]
+    ctx.expect(
+        await ctx.call(
+            "alloc_dispatch_capacity_409",
+            "POST",
+            "/v1/allocations",
+            json=_alloc_body(last_route, f"p0-dispatch-{len(legs)}", last_qty),
+        ),
+        409,
+        "DISPATCH_CAPACITY_EXCEEDED",
+    )
+    for i, alloc_id in enumerate(
+        accepted, start=1
+    ):  # refund, so later sections see normal stock
+        ctx.expect(
+            await ctx.call(
+                f"alloc_dispatch_leg_{i}_cancel",
+                "POST",
+                f"/v1/allocations/{alloc_id}/cancel",
+            ),
+            200,
+        )
+
+
 def _statuses(ex: Exchange) -> dict[Any, str]:
     return {i["id"]: i["status"] for i in ex.body} if isinstance(ex.body, list) else {}
 
 
-async def _observe_event(ctx: SmokeContext, kind: str, path: str, bad: str) -> None:
-    """Inject ``kind`` for 2 ticks and record its lifecycle and its effect on ``path``.
-
-    ``parameters`` stays ``{}``: EventCreate leaves it free-form and docs/ name no filter
-    keys. Recon on 1.0.0 showed an unfiltered event goes ACTIVE but affects no entity,
-    so the checks pin that observed behaviour rather than a guessed filter.
-    """
-    event: dict[str, Any] = {
+async def _run_event(
+    ctx: SmokeContext,
+    label: str,
+    kind: str,
+    parameters: dict[str, Any],
+    path: str,
+    bad: str,
+) -> tuple[Any, list[Any]]:
+    """Inject a 2-tick event, step into it, and return (event id, entities now ``bad``)."""
+    event = {
         "type": kind,
         "start_tick": ctx.current_tick,
         "duration_ticks": 2,
-        "parameters": {},
+        "parameters": parameters,
     }
-    created = await ctx.call(f"admin_event_{kind}", "POST", "/admin/events", json=event)
+    created = await ctx.call(
+        f"admin_event_{label}", "POST", "/admin/events", json=event
+    )
     ctx.expect(created, (200, 201))
     event_id = created.body.get("id") if isinstance(created.body, dict) else None
-
     await ctx.step(1)
-    during = await ctx.call(f"events_during_{kind}", "GET", "/v1/events")
+    during = await ctx.call(f"events_during_{label}", "GET", "/v1/events")
     ctx.check(
-        f"{kind}_active",
+        f"{label}_active",
         _statuses(during).get(event_id) == "ACTIVE",
         f"{_statuses(during)}",
     )
-    hit = await ctx.call(f"{kind}_during", "GET", path)
+    hit = await ctx.call(f"{label}_during", "GET", path)
     affected = sorted(i for i, st in _statuses(hit).items() if st == bad)
-    ctx.manifest["findings"][f"event_{kind}_empty_parameters_affects"] = affected
-    ctx.check(
-        f"{kind}_empty_parameters_no_effect", affected == [], f"{bad}: {affected}"
-    )
+    ctx.manifest["findings"][f"event_{label}_affects"] = affected
+    return event_id, affected
 
-    resolved = False
+
+async def _await_resolved(ctx: SmokeContext, label: str, event_id: Any) -> None:
     for _ in range(3):
         await ctx.step(1)
         poll = await ctx.call("poll", "GET", "/v1/events", record=False)
         if _statuses(poll).get(event_id) == "RESOLVED":
-            resolved = True
-            break
+            ctx.check(f"{label}_resolved", True)
+            return
     ctx.check(
-        f"{kind}_resolved", resolved, f"event {event_id} not RESOLVED within 3 ticks"
+        f"{label}_resolved", False, f"event {event_id} not RESOLVED within 3 ticks"
     )
 
 
 async def section_events(ctx: SmokeContext) -> None:
-    await _observe_event(ctx, "route_disruption", "/v1/routes", "DISRUPTED")
-    await _observe_event(ctx, "station_outage", "/v1/stations", "OUTAGE")
-    listed = await ctx.call("events_list", "GET", "/v1/events")
+    route = ctx.topology["routes"][ctx.manifest["findings"]["happy_path"]["route_id"]]
+    station_id = route["destination_station_id"]
+
+    # Guide §7.8 says an empty filter list applies the event to every entity of that
+    # type. Image 1.0.0 disagrees: both an absent key and an empty list affect nothing,
+    # so crisis injection must always name explicit ids. Both forms are pinned here.
+    eid, affected = await _run_event(
+        ctx,
+        "route_disruption_no_filter_key",
+        "route_disruption",
+        {},
+        "/v1/routes",
+        "DISRUPTED",
+    )
     ctx.check(
-        "events_list",
-        sorted(_statuses(listed).values()) == ["RESOLVED", "RESOLVED"],
-        f"{_statuses(listed)}",
+        "route_disruption_no_filter_key_affects_none", affected == [], f"{affected}"
+    )
+    await _await_resolved(ctx, "route_disruption_no_filter_key", eid)
+
+    eid, affected = await _run_event(
+        ctx,
+        "route_disruption_empty_filter",
+        "route_disruption",
+        {"route_ids": []},
+        "/v1/routes",
+        "DISRUPTED",
+    )
+    ctx.check(
+        "route_disruption_empty_filter_affects_none",
+        affected == [],
+        f"{affected} (guide §7.8 predicts all routes)",
+    )
+    await _await_resolved(ctx, "route_disruption_empty_filter", eid)
+
+    eid, affected = await _run_event(
+        ctx,
+        "route_disruption",
+        "route_disruption",
+        {"route_ids": [route["id"]]},
+        "/v1/routes",
+        "DISRUPTED",
+    )
+    ctx.check(
+        "route_disruption_targets_route", affected == [route["id"]], f"{affected}"
+    )
+    ctx.expect(
+        await ctx.call(
+            "alloc_route_disrupted_409",
+            "POST",
+            "/v1/allocations",
+            json=_alloc_body(route, "p0-disrupted-1", 100),
+        ),
+        409,
+        "ROUTE_DISRUPTED",
+    )
+    await _await_resolved(ctx, "route_disruption", eid)
+
+    eid, affected = await _run_event(
+        ctx,
+        "station_outage",
+        "station_outage",
+        {"station_ids": [station_id]},
+        "/v1/stations",
+        "OUTAGE",
+    )
+    ctx.check("station_outage_targets_station", affected == [station_id], f"{affected}")
+    ctx.expect(
+        await ctx.call(
+            "alloc_station_closed_409",
+            "POST",
+            "/v1/allocations",
+            json=_alloc_body(route, "p0-closed-1", 100),
+        ),
+        409,
+        "STATION_CLOSED",
+    )
+    await _await_resolved(ctx, "station_outage", eid)
+
+    listed = await ctx.call("events_list", "GET", "/v1/events")
+    statuses = sorted(_statuses(listed).values())
+    ctx.check("events_list", statuses == ["RESOLVED"] * 4, f"{_statuses(listed)}")
+    after = await ctx.call("routes_after_events", "GET", "/v1/routes")
+    ctx.check(
+        "routes_after_events",
+        set(_statuses(after).values()) == {"AVAILABLE"},
+        f"{_statuses(after)}",
     )
 
 
@@ -884,9 +1096,10 @@ def _top_key(ex: Exchange) -> str | None:
     return next(iter(ex.body), None) if isinstance(ex.body, dict) else None
 
 
-async def _inject_fault(ctx: SmokeContext, kind: str) -> None:
-    # parameters stays {} (FaultCreate leaves it free-form; docs/ name no keys): defaults apply.
-    body = {"type": kind, "duration_seconds": 60, "parameters": {}}
+async def _inject_fault(
+    ctx: SmokeContext, kind: str, parameters: dict[str, Any] | None = None
+) -> None:
+    body = {"type": kind, "duration_seconds": 60, "parameters": parameters or {}}
     ctx.expect(
         await ctx.call(f"admin_fault_{kind}", "POST", "/admin/faults", json=body),
         (200, 201),
@@ -946,15 +1159,17 @@ async def section_faults(ctx: SmokeContext) -> None:
     base = await ctx.call(
         "instance_before_latency", "GET", "/v1/instance", volatile=True
     )
-    await _inject_fault(ctx, "latency")
+    await _inject_fault(ctx, "latency", {"delay_ms": LATENCY_DELAY_MS})
     slow = await ctx.call("instance_latency", "GET", "/v1/instance", volatile=True)
     health = await ctx.call("health_latency", "GET", "/v1/health", volatile=True)
     await _clear_fault(ctx, "latency")
     delta = slow.elapsed_ms - base.elapsed_ms
-    ctx.manifest["timings"]["latency_fault_default_delta_ms"] = round(delta, 1)
+    ctx.manifest["timings"]["latency_fault_delta_ms"] = round(delta, 1)
     ctx.manifest["timings"]["latency_fault_health_ms"] = round(health.elapsed_ms, 1)
     ctx.check(
-        "latency_applied", slow.status == 200 and delta >= 100, f"delta {delta:.0f} ms"
+        "latency_applied",
+        slow.status == 200 and delta >= LATENCY_DELAY_MS * 0.8,
+        f"delta {delta:.0f} ms for delay_ms={LATENCY_DELAY_MS}",
     )
     ctx.check(
         "latency_health_bypass",
@@ -962,15 +1177,19 @@ async def section_faults(ctx: SmokeContext) -> None:
         f"health {health.elapsed_ms:.0f} ms vs instance {slow.elapsed_ms:.0f} ms",
     )
 
-    await _inject_fault(ctx, "error_rate")
+    await _inject_fault(
+        ctx, "error_rate", {"rate": 1.0}
+    )  # rate 1.0 keeps the run deterministic
     hit, attempts = await call_until_status(
-        ctx, "instance_error_rate_503", "/v1/instance", 503, 40
+        ctx, "instance_error_rate_503", "/v1/instance", 503, 3
     )
     ctx.manifest["timings"]["error_rate_attempts_to_first_503"] = attempts
     ctx.check(
         "instance_error_rate_503",
-        hit is not None and envelope_code(hit.body) == "FAULT_INJECTED",
-        f"no 503 in {attempts} attempts",
+        hit is not None
+        and attempts == 1
+        and envelope_code(hit.body) == "FAULT_INJECTED",
+        f"first 503 after {attempts} attempts (hit={hit is not None})",
     )
     await _clear_fault(ctx, "error_rate")
 
