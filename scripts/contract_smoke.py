@@ -29,11 +29,12 @@ VOLATILE_BODY_KEYS = frozenset({"wall_time", "start_wall_time", "end_wall_time"}
 DROPPED_HEADERS = frozenset({"date", "server"})
 _NORMALIZE_DROP = VOLATILE_BODY_KEYS | {"elapsed_ms", "content-length"}
 DEFAULT_BASE_URL = "http://localhost:8000"
-DEFAULT_OUT = Path("tests/fixtures/contract/sim-1.0.0")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_OUT = REPO_ROOT / "tests/fixtures/contract/sim-1.0.0"
 HEALTH_WAIT_S = 30.0
 SSE_RECONNECT_S = 0.5
 SSE_KEEPALIVE_WAIT_S = 20.0
-EVIDENCE_DIR = Path("evidence/phase-0")
+EVIDENCE_DIR = REPO_ROOT / "evidence/phase-0"
 SSE_EVENT_NAMES = (
     "simulation.tick",
     "allocation.status_changed",
@@ -230,6 +231,7 @@ class SseRecorder:
         self.client = client
         self.segments: list[SseSegment] = []
         self.line_times: list[list[float]] = []
+        self.crash: str | None = None
         self._stop = asyncio.Event()
         self._task: asyncio.Task[None] | None = None
 
@@ -240,14 +242,14 @@ class SseRecorder:
         while not self._stop.is_set():
             seg = SseSegment(status=-1, content_type=None)
             times: list[float] = []
+            self.segments.append(seg)
+            self.line_times.append(times)
             try:
                 async with self.client.stream(
                     "GET", "/v1/stream", timeout=httpx.Timeout(10.0, read=None)
                 ) as resp:
                     seg.status = resp.status_code
                     seg.content_type = resp.headers.get("content-type")
-                    self.segments.append(seg)
-                    self.line_times.append(times)
                     if resp.status_code != 200:
                         await resp.aread()
                         seg.lines.append(resp.text)
@@ -258,9 +260,6 @@ class SseRecorder:
                             times.append(time.monotonic())
             except httpx.HTTPError as exc:
                 seg.error = f"{type(exc).__name__}: {exc}"
-                if seg not in self.segments:
-                    self.segments.append(seg)
-                    self.line_times.append(times)
             try:
                 await asyncio.wait_for(self._stop.wait(), SSE_RECONNECT_S)
             except TimeoutError:
@@ -297,17 +296,24 @@ class SseRecorder:
         return True
 
     async def stop(self, timeout_s: float = 5.0) -> bool:
-        """Stop recording; True if the loop ended within the deadline."""
+        """Stop recording; True if the loop ended within the deadline.
+
+        Never raises for a crashed loop (the crash is kept in ``crash``) and never
+        swallows a cancellation aimed at the caller.
+        """
         self._stop.set()
         stopped = True
         if self._task is not None:
             self._task.cancel()
-            try:
-                await asyncio.wait_for(self._task, timeout_s)
-            except asyncio.CancelledError:
-                pass
-            except TimeoutError:
-                stopped = False
+            done, _ = await asyncio.wait({self._task}, timeout=timeout_s)
+            stopped = bool(done)
+            if (
+                done
+                and not self._task.cancelled()
+                and self._task.exception() is not None
+            ):
+                exc = self._task.exception()
+                self.crash = f"{type(exc).__name__}: {exc}"
         for seg in self.segments:
             if seg.status == 200:
                 seg.events = parse_sse_lines(seg.lines)[0]
@@ -345,7 +351,6 @@ class SmokeContext:
         self.section = ""
         self.checks: list[dict[str, Any]] = []
         self.current_tick: int | None = None
-        self.openapi: dict[str, Any] = {}
         self.topology: dict[str, dict[str, dict[str, Any]]] = {}
         self.manifest: dict[str, Any] = {"instance": {}, "findings": {}, "timings": {}}
         self.sse: SseRecorder | None = None
@@ -357,7 +362,6 @@ class SmokeContext:
         method: str,
         path: str,
         *,
-        section: str | None = None,
         params: dict[str, Any] | None = None,
         json: Any = None,
         volatile: bool = False,
@@ -374,7 +378,6 @@ class SmokeContext:
             json,
             time.perf_counter() - started,
             volatile,
-            section,
         )
         if record:
             self.writer.write(ex)
@@ -390,7 +393,6 @@ class SmokeContext:
         json: Any,
         elapsed_s: float,
         volatile: bool = False,
-        section: str | None = None,
     ) -> Exchange:
         """Build an Exchange from a response whose body has already been read."""
         body, body_text = _decode(resp)
@@ -402,7 +404,7 @@ class SmokeContext:
         headers.setdefault("x-simulator-stale", None)
         return Exchange(
             name=name,
-            section=section or self.section,
+            section=self.section,
             method=method,
             path=path,
             query=dict(params or {}),
@@ -478,7 +480,6 @@ async def section_preflight(ctx: SmokeContext) -> None:
     )
     if not has_admin:
         raise SmokeAbort("openapi.json lacks admin paths — stop and ask")
-    ctx.openapi = spec.body
 
     ctx.expect(
         await ctx.call("admin_faults_clear_start", "POST", "/admin/faults/clear"), 200
@@ -618,6 +619,11 @@ def other_station(
     )
 
 
+def mismatch_quantity(qty: float) -> float:
+    """A different, still valid quantity for provoking IDEMPOTENCY_KEY_MISMATCH."""
+    return qty / 2
+
+
 def _alloc_body(
     route: Mapping[str, Any], key: str, qty: float, fuel: str = "DIESEL"
 ) -> dict[str, Any]:
@@ -663,7 +669,7 @@ async def section_allocations(ctx: SmokeContext) -> None:
             "alloc_key_mismatch_409",
             "POST",
             "/v1/allocations",
-            json={**body, "quantity": qty - 1},
+            json={**body, "quantity": mismatch_quantity(qty)},
         ),
         409,
         "IDEMPOTENCY_KEY_MISMATCH",
@@ -1148,18 +1154,19 @@ async def run_smoke(
                 aborted = True
                 break
     finally:
+        await _cleanup(client)
         if ctx.sse is not None:
             ctx.check(
                 "sse_stop_within_deadline",
                 await ctx.sse.stop(),
                 "recorder did not stop in 5 s",
             )
+            ctx.check("sse_recorder_healthy", ctx.sse.crash is None, f"{ctx.sse.crash}")
             ctx.writer.write_raw("sse_stream", "sse", ctx.sse.to_fixture())
         if not aborted and len(sections_run) == len(SECTIONS):
             recorded = {entry["name"] for entry in ctx.writer.index}
             missing = [n for n in REQUIRED_FIXTURES if n not in recorded]
             ctx.check("required_fixtures_recorded", not missing, f"missing {missing}")
-        await _cleanup(client)
         ctx.manifest["sections_run"] = sections_run
         manifest = _write_manifest(ctx, out_dir, meta or {})
     return 0 if manifest["all_passed"] else 1
@@ -1173,6 +1180,15 @@ def _run_quiet(cmd: list[str]) -> str | None:
     except (OSError, subprocess.SubprocessError):
         return None
     return out.stdout.strip() or None
+
+
+def git_meta(runner: Callable[[list[str]], str | None] = _run_quiet) -> dict[str, Any]:
+    """HEAD plus whether tracked code differs from it (fixtures and evidence excluded)."""
+    status = runner(
+        ["git", "status", "--porcelain", "--untracked-files=no", "--", ".",
+         ":!tests/fixtures", ":!evidence"]
+    )  # fmt: skip
+    return {"git_sha": runner(["git", "rev-parse", "HEAD"]), "git_dirty": bool(status)}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1190,6 +1206,15 @@ def main(argv: list[str] | None = None) -> int:
         help="fixture dir that this run must reproduce exactly",
     )
     args = parser.parse_args(argv)
+    out = args.out.resolve()
+    if args.compare_to is not None and args.compare_to.resolve() == out:
+        parser.error(
+            "--compare-to must differ from --out: the run rewrites --out first"
+        )
+    if args.sections and out == DEFAULT_OUT.resolve():
+        parser.error(
+            "--section runs are partial: pass --out <scratch dir> to keep fixtures"
+        )
 
     meta = {
         "image": IMAGE,
@@ -1203,7 +1228,7 @@ def main(argv: list[str] | None = None) -> int:
                 IMAGE,
             ]
         ),
-        "git_sha": _run_quiet(["git", "rev-parse", "HEAD"]),
+        **git_meta(),
         "base_url": args.base_url,
     }
 

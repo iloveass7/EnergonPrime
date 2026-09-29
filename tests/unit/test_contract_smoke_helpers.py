@@ -100,3 +100,16 @@ def test_writer_stores_non_json_body_as_text(tmp_path) -> None:
     assert data["response"]["body_text"] == "<html>"
     assert data["response"]["headers"]["x-simulator-stale"] is None
     assert [entry["name"] for entry in writer.index] == ["first", "admin_html"]
+
+
+def test_git_meta_flags_dirty_tree() -> None:
+    from scripts.contract_smoke import git_meta
+
+    outputs = {"rev-parse": "abc123", "status": " M scripts/contract_smoke.py"}
+
+    def runner(cmd: list[str]) -> str | None:
+        return outputs[cmd[1]]
+
+    assert git_meta(runner) == {"git_sha": "abc123", "git_dirty": True}
+    outputs["status"] = None
+    assert git_meta(runner) == {"git_sha": "abc123", "git_dirty": False}
