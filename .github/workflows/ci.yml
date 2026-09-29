@@ -37,6 +37,9 @@ jobs:
       - run: docker compose up -d --build --wait
       - run: uv run python scripts/contract_smoke.py --out /tmp/p0-contract
       - run: uv run python scripts/e2e_smoke.py
+      - name: Playwright UI smoke
+        working-directory: frontend
+        run: npm ci && npx playwright install --with-deps chromium && npx playwright test
       - name: k6 smoke
         uses: grafana/setup-k6-action@v1
       - run: k6 run -e PROFILE=smoke load/k6_api.js

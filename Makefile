@@ -1,4 +1,4 @@
-.PHONY: up down logs test lint smoke contract load e2e dev-api dev-worker dev-web
+.PHONY: up down logs test lint smoke contract load e2e ui-test dev-api dev-worker dev-web
 
 up:            ## full stack (simulator, redis, api, worker, web)
 	docker compose up -d --build
@@ -26,6 +26,9 @@ contract:      ## Phase 0 contract smoke against a clean simulator
 
 smoke:         ## end-to-end smoke against the running stack
 	uv run python scripts/e2e_smoke.py
+
+ui-test:       ## Playwright smoke against the running web app (:3000)
+	cd frontend && npx playwright test
 
 load:          ## k6 normal profile against the API
 	k6 run -e BASE_URL=$${BASE_URL:-http://localhost:8080} load/k6_api.js

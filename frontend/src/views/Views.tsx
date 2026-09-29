@@ -2,13 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ApiError, api, fmt, type Dashboard, type Level } from "../api";
 import { AllocStatus, Bar, Empty, LevelBadge, Section, Stat, StatusPill } from "../ui";
-import { RecommendationCard } from "./Recommendations";
+import { RecommendationCard, useRecReview } from "./Recommendations";
 
 const FUELS = ["DIESEL", "PETROL", "OCTANE"];
 
 export function CommandCenter({ d }: { d: Dashboard }) {
   const k = d.kpi;
   const top = d.risks.filter((r) => r.level !== "LOW").slice(0, 8);
+  const [review, dialog] = useRecReview(d.recommendations, d.execution_blocked);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -50,12 +51,13 @@ export function CommandCenter({ d }: { d: Dashboard }) {
         <div className="space-y-4">
           <Section title="Recommended actions">
             {d.recommendations.length === 0 ? <Empty>No shipments needed.</Empty> : (
-              <div className="space-y-2">{d.recommendations.slice(0, 5).map((r) => <RecommendationCard key={r.id} rec={r} blocked={d.execution_blocked} compact />)}</div>
+              <div className="space-y-2">{d.recommendations.slice(0, 5).map((r) => <RecommendationCard key={r.id} rec={r} onReview={review} compact />)}</div>
             )}
           </Section>
           <Section title="Alerts">
             <AlertList alerts={d.alerts.open.slice(0, 8)} />
           </Section>
+          {dialog}
         </div>
       </div>
     </div>

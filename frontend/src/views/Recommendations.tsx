@@ -4,8 +4,7 @@ import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContai
 import { ApiError, api, fmt, type Recommendation } from "../api";
 import { Empty, LevelBadge, Modal, Section } from "../ui";
 
-export function RecommendationCard({ rec, blocked, compact }: { rec: Recommendation; blocked: string | null; compact?: boolean }) {
-  const [open, setOpen] = useState(false);
+export function RecommendationCard({ rec, onReview, compact }: { rec: Recommendation; onReview: (rec: Recommendation) => void; compact?: boolean }) {
   return (
     <div className="rounded-md border border-slate-800 bg-slate-950/60 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -14,7 +13,7 @@ export function RecommendationCard({ rec, blocked, compact }: { rec: Recommendat
           <span className="font-medium">{rec.station_name}</span>
           <span className="text-slate-400">{rec.fuel_type}</span>
         </div>
-        <button className="btn-primary" onClick={() => setOpen(true)} aria-label={`Review recommendation for ${rec.station_name} ${rec.fuel_type}`}>
+        <button className="btn-primary" onClick={() => onReview(rec)} aria-label={`Review recommendation for ${rec.station_name} ${rec.fuel_type}`}>
           Review
         </button>
       </div>
@@ -27,12 +26,19 @@ export function RecommendationCard({ rec, blocked, compact }: { rec: Recommendat
           {fmt.pct(rec.impact.risk_before)} → {fmt.pct(rec.impact.risk_after)}
         </div>
       )}
-      {open && <RecommendationDetail rec={rec} blocked={blocked} onClose={() => setOpen(false)} />}
     </div>
   );
 }
 
-function RecommendationDetail({ rec, blocked, onClose }: { rec: Recommendation; blocked: string | null; onClose: () => void }) {
+/** Review dialog state lives above the list, so a re-plan never closes it under the operator. */
+export function useRecReview(recs: Recommendation[], blocked: string | null) {
+  const [open, setOpen] = useState<Recommendation | null>(null);
+  const active = open != null && recs.some((r) => r.id === open.id);
+  const dialog = open ? <RecommendationDetail rec={open} blocked={blocked} superseded={!active} onClose={() => setOpen(null)} /> : null;
+  return [setOpen, dialog] as const;
+}
+
+function RecommendationDetail({ rec, blocked, superseded, onClose }: { rec: Recommendation; blocked: string | null; superseded: boolean; onClose: () => void }) {
   const qc = useQueryClient();
   const [qty, setQty] = useState<string>(String(rec.quantity));
   const [note, setNote] = useState("");
@@ -84,6 +90,7 @@ function RecommendationDetail({ rec, blocked, onClose }: { rec: Recommendation; 
         <div className="text-xs text-slate-400">Stockout: {fmt.h(rec.impact.stockout_before_h)} → {fmt.h(rec.impact.stockout_after_h)} · ticks of 15 simulated minutes · model-estimated on simulated data</div>
         <ul className="list-disc space-y-1 pl-5 text-slate-300">{rec.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
 
+        {superseded && !approve.data && <div className="rounded border border-amber-400/50 bg-amber-400/10 p-2 text-amber-200">The planner has replaced this recommendation since you opened it; approving it will be refused. Close and review the current one.</div>}
         {blocked && <div className="rounded border border-amber-400/50 bg-amber-400/10 p-2 text-amber-200">Execution blocked: {blocked}</div>}
         {err && <div role="alert" className="rounded border border-rose-500/60 bg-rose-600/15 p-2 text-rose-200">{err.code}: {err.detail}{err.upstream ? ` (simulator: ${err.upstream})` : ""}</div>}
         {result && (
@@ -123,11 +130,13 @@ function RecommendationDetail({ rec, blocked, onClose }: { rec: Recommendation; 
 }
 
 export function RecommendationsView({ recs, blocked }: { recs: Recommendation[]; blocked: string | null }) {
+  const [review, dialog] = useRecReview(recs, blocked);
   return (
     <Section title={`Recommendations (${recs.length})`} right={<span className="text-xs text-slate-400">MANUAL policy · human approval required</span>}>
       {recs.length === 0 ? <Empty>No shipments needed right now: every station is covered over the horizon.</Empty> : (
-        <div className="grid gap-3 lg:grid-cols-2">{recs.map((r) => <RecommendationCard key={r.id} rec={r} blocked={blocked} />)}</div>
+        <div className="grid gap-3 lg:grid-cols-2">{recs.map((r) => <RecommendationCard key={r.id} rec={r} onReview={review} />)}</div>
       )}
+      {dialog}
     </Section>
   );
 }
