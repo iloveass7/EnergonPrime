@@ -6,6 +6,7 @@ RECONCILING -> ACCEPTED (key found in /v1/allocations) | SUBMITTING (one same-ke
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import time
@@ -62,8 +63,15 @@ class DecisionService:
         self.db = db
         self.client = client
         self.min_leg = min_leg
+        self._approve_lock = asyncio.Lock()  # one approval at a time per process
 
     async def approve(
+        self, rec_id: str, actor: str, quantity: float | None = None, note: str | None = None
+    ) -> dict[str, Any]:
+        async with self._approve_lock:
+            return await self._approve(rec_id, actor, quantity, note)
+
+    async def _approve(
         self,
         rec_id: str,
         actor: str,

@@ -78,6 +78,7 @@ class SimulatorClient:
         read_timeout: float = 2.0,
         total_timeout: float = 3.0,
         attempts: int = 3,
+        max_inflight: int = 4,
         breaker: CircuitBreaker | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
@@ -85,10 +86,15 @@ class SimulatorClient:
         self.attempts = attempts
         self.total_timeout = total_timeout
         self.breaker = breaker or CircuitBreaker()
+        # The simulator's DB pool is 15 connections (observed QueuePool exhaustion under bursts):
+        # cap our in-flight REST calls so worker + API replicas stay well under it.
+        self._inflight = asyncio.Semaphore(max_inflight)
         self._http = httpx.AsyncClient(
             base_url=base_url,
             timeout=httpx.Timeout(read_timeout, connect=connect_timeout),
-            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+            limits=httpx.Limits(
+                max_connections=max_inflight + 2, max_keepalive_connections=max_inflight
+            ),
             transport=transport,
         )
         self.last_success_at: float | None = None
@@ -109,9 +115,10 @@ class SimulatorClient:
                 raise SimCircuitOpen(f"circuit open, not calling {path}")
             started = time.perf_counter()
             try:
-                resp = await asyncio.wait_for(
-                    self._http.get(path, params=params), self.total_timeout
-                )
+                async with self._inflight:
+                    resp = await asyncio.wait_for(
+                        self._http.get(path, params=params), self.total_timeout
+                    )
             except (TimeoutError, httpx.TimeoutException) as exc:
                 last = SimTimeout(f"{path}: {type(exc).__name__}")
             except httpx.TransportError as exc:
@@ -208,9 +215,10 @@ class SimulatorClient:
             raise SimCircuitOpen(f"circuit open, not calling {path}")
         started = time.perf_counter()
         try:
-            resp = await asyncio.wait_for(
-                self._http.request(method, path, json=body), self.total_timeout
-            )
+            async with self._inflight:
+                resp = await asyncio.wait_for(
+                    self._http.request(method, path, json=body), self.total_timeout
+                )
         except (TimeoutError, httpx.TimeoutException, httpx.TransportError) as exc:
             self.breaker.failure()
             m.SIM_ERRORS.labels(path, "ambiguous").inc()

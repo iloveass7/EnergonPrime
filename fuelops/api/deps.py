@@ -26,7 +26,8 @@ class AppState:
         self.store = StateStore(settings.redis_url)
         self.db = Database(settings.sqlalchemy_url)
         self.client = SimulatorClient(settings.sim_base_url, connect_timeout=settings.sim_connect_timeout_s,
-                                      read_timeout=settings.sim_read_timeout_s, total_timeout=settings.sim_total_timeout_s)  # fmt: skip
+                                      read_timeout=settings.sim_read_timeout_s, total_timeout=settings.sim_total_timeout_s,
+            max_inflight=3)  # fmt: skip
         self.decisions = DecisionService(self.db, self.client, min_leg=settings.min_leg_liters)
         self.admin = AdminTestPort(settings.sim_base_url) if settings.test_plane_enabled else None
         self._l1: tuple[float, dict[str, Any]] | None = None

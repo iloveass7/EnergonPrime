@@ -20,7 +20,7 @@ services:
       SIMULATION_SPEED: ${SIMULATION_SPEED:-8}
       TICK_MINUTES: ${TICK_MINUTES:-15}
       SIMULATOR_START_MODE: ${SIMULATOR_START_MODE:-paused}
-    ports: ["8000:8000"]
+    ports: ["${SIM_HOST_PORT:-8000}:8000"]
     healthcheck: { test: ["CMD", "curl", "-fs", "http://localhost:8000/v1/health"], interval: 5s, retries: 12 }
 
   redis:
