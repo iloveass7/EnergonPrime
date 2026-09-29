@@ -321,6 +321,7 @@ class SmokeContext:
         params: dict[str, Any] | None = None,
         json: Any = None,
         volatile: bool = False,
+        record: bool = True,
     ) -> Exchange:
         started = time.perf_counter()
         resp = await self.client.request(method, path, params=params, json=json)
@@ -347,7 +348,8 @@ class SmokeContext:
             sim_tick=self.current_tick,
             volatile=volatile,
         )
-        self.writer.write(ex)
+        if record:
+            self.writer.write(ex)
         return ex
 
     def check(self, name: str, ok: bool, detail: str = "") -> bool:
@@ -698,11 +700,70 @@ async def section_allocations(ctx: SmokeContext) -> None:
             )
 
 
+def _statuses(ex: Exchange) -> dict[Any, str]:
+    return {i["id"]: i["status"] for i in ex.body} if isinstance(ex.body, list) else {}
+
+
+async def _observe_event(ctx: SmokeContext, kind: str, path: str, bad: str) -> None:
+    """Inject ``kind`` for 2 ticks and record its lifecycle and its effect on ``path``.
+
+    ``parameters`` stays ``{}``: EventCreate leaves it free-form and docs/ name no filter
+    keys. Recon on 1.0.0 showed an unfiltered event goes ACTIVE but affects no entity,
+    so the checks pin that observed behaviour rather than a guessed filter.
+    """
+    event: dict[str, Any] = {
+        "type": kind,
+        "start_tick": ctx.current_tick,
+        "duration_ticks": 2,
+        "parameters": {},
+    }
+    created = await ctx.call(f"admin_event_{kind}", "POST", "/admin/events", json=event)
+    ctx.expect(created, (200, 201))
+    event_id = created.body.get("id") if isinstance(created.body, dict) else None
+
+    await ctx.step(1)
+    during = await ctx.call(f"events_during_{kind}", "GET", "/v1/events")
+    ctx.check(
+        f"{kind}_active",
+        _statuses(during).get(event_id) == "ACTIVE",
+        f"{_statuses(during)}",
+    )
+    hit = await ctx.call(f"{kind}_during", "GET", path)
+    affected = sorted(i for i, st in _statuses(hit).items() if st == bad)
+    ctx.manifest["findings"][f"event_{kind}_empty_parameters_affects"] = affected
+    ctx.check(
+        f"{kind}_empty_parameters_no_effect", affected == [], f"{bad}: {affected}"
+    )
+
+    resolved = False
+    for _ in range(3):
+        await ctx.step(1)
+        poll = await ctx.call("poll", "GET", "/v1/events", record=False)
+        if _statuses(poll).get(event_id) == "RESOLVED":
+            resolved = True
+            break
+    ctx.check(
+        f"{kind}_resolved", resolved, f"event {event_id} not RESOLVED within 3 ticks"
+    )
+
+
+async def section_events(ctx: SmokeContext) -> None:
+    await _observe_event(ctx, "route_disruption", "/v1/routes", "DISRUPTED")
+    await _observe_event(ctx, "station_outage", "/v1/stations", "OUTAGE")
+    listed = await ctx.call("events_list", "GET", "/v1/events")
+    ctx.check(
+        "events_list",
+        sorted(_statuses(listed).values()) == ["RESOLVED", "RESOLVED"],
+        f"{_statuses(listed)}",
+    )
+
+
 Section = Callable[[SmokeContext], Awaitable[None]]
 SECTIONS: list[tuple[str, Section]] = [
     ("preflight", section_preflight),
     ("reads", section_reads),
     ("allocations", section_allocations),
+    ("events", section_events),
 ]
 
 
