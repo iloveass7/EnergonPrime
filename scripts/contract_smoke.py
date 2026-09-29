@@ -325,7 +325,34 @@ class SmokeContext:
     ) -> Exchange:
         started = time.perf_counter()
         resp = await self.client.request(method, path, params=params, json=json)
-        elapsed_ms = (time.perf_counter() - started) * 1000
+        ex = self.exchange_from(
+            resp,
+            name,
+            method,
+            path,
+            params,
+            json,
+            time.perf_counter() - started,
+            volatile,
+            section,
+        )
+        if record:
+            self.writer.write(ex)
+        return ex
+
+    def exchange_from(
+        self,
+        resp: httpx.Response,
+        name: str,
+        method: str,
+        path: str,
+        params: dict[str, Any] | None,
+        json: Any,
+        elapsed_s: float,
+        volatile: bool = False,
+        section: str | None = None,
+    ) -> Exchange:
+        """Build an Exchange from a response whose body has already been read."""
         body, body_text = _decode(resp)
         headers: dict[str, str | None] = {
             k.lower(): v
@@ -333,7 +360,7 @@ class SmokeContext:
             if k.lower() not in DROPPED_HEADERS
         }
         headers.setdefault("x-simulator-stale", None)
-        ex = Exchange(
+        return Exchange(
             name=name,
             section=section or self.section,
             method=method,
@@ -344,13 +371,10 @@ class SmokeContext:
             headers=headers,
             body=body,
             body_text=body_text,
-            elapsed_ms=elapsed_ms,
+            elapsed_ms=elapsed_s * 1000,
             sim_tick=self.current_tick,
             volatile=volatile,
         )
-        if record:
-            self.writer.write(ex)
-        return ex
 
     def check(self, name: str, ok: bool, detail: str = "") -> bool:
         self.checks.append({"name": name, "ok": bool(ok), "detail": detail})
@@ -758,12 +782,172 @@ async def section_events(ctx: SmokeContext) -> None:
     )
 
 
+async def probe_stream(ctx: SmokeContext, name: str) -> Exchange:
+    """One GET /v1/stream that records a non-200 envelope and never waits on a live stream."""
+    started = time.perf_counter()
+    async with ctx.client.stream(
+        "GET", "/v1/stream", timeout=httpx.Timeout(10.0, read=5.0)
+    ) as resp:
+        if resp.status_code != 200:
+            await resp.aread()
+            ex = ctx.exchange_from(
+                resp,
+                name,
+                "GET",
+                "/v1/stream",
+                None,
+                None,
+                time.perf_counter() - started,
+            )
+        else:  # a live stream: record status and type only, never read the body
+            ex = Exchange(
+                name=name,
+                section=ctx.section,
+                method="GET",
+                path="/v1/stream",
+                query={},
+                req_body=None,
+                status=200,
+                headers={
+                    "content-type": resp.headers.get("content-type"),
+                    "x-simulator-stale": None,
+                },
+                body=None,
+                body_text=None,
+                elapsed_ms=(time.perf_counter() - started) * 1000,
+                sim_tick=ctx.current_tick,
+                volatile=False,
+            )
+    ctx.writer.write(ex)
+    return ex
+
+
+async def call_until_status(
+    ctx: SmokeContext, name: str, path: str, status: int, attempts: int
+) -> tuple[Exchange | None, int]:
+    """GET ``path`` until it returns ``status``; only that hit becomes a fixture."""
+    for attempt in range(1, attempts + 1):
+        ex = await ctx.call(name, "GET", path, record=False)
+        if ex.status == status:
+            ctx.writer.write(ex)
+            return ex, attempt
+    return None, attempts
+
+
+def _top_key(ex: Exchange) -> str | None:
+    return next(iter(ex.body), None) if isinstance(ex.body, dict) else None
+
+
+async def _inject_fault(ctx: SmokeContext, kind: str) -> None:
+    # parameters stays {} (FaultCreate leaves it free-form; docs/ name no keys): defaults apply.
+    body = {"type": kind, "duration_seconds": 60, "parameters": {}}
+    ctx.expect(
+        await ctx.call(f"admin_fault_{kind}", "POST", "/admin/faults", json=body),
+        (200, 201),
+    )
+
+
+async def _clear_fault(ctx: SmokeContext, kind: str) -> None:
+    ctx.expect(
+        await ctx.call(f"admin_faults_clear_{kind}", "POST", "/admin/faults/clear"), 200
+    )
+
+
+async def section_faults(ctx: SmokeContext) -> None:
+    await _inject_fault(ctx, "stale_data")
+    stale = await ctx.call("depots_stale", "GET", "/v1/depots")
+    ctx.check(
+        "depots_stale",
+        stale.status == 200 and is_stale(stale.headers),
+        f"{stale.headers}",
+    )
+    await _clear_fault(ctx, "stale_data")
+    fresh = await ctx.call("depots_fresh", "GET", "/v1/depots")
+    ctx.check(
+        "depots_fresh",
+        fresh.status == 200 and not is_stale(fresh.headers),
+        f"{fresh.headers}",
+    )
+
+    await _inject_fault(ctx, "unavailable")
+    down = await ctx.call("instance_unavailable_503", "GET", "/v1/instance")
+    ctx.expect(down, 503, "FAULT_INJECTED")
+    ctx.check(
+        "unavailable_uses_error_envelope",
+        _top_key(down) == "error",
+        f"top key {_top_key(down)}",
+    )
+    ctx.expect(await ctx.call("health_during_unavailable", "GET", "/v1/health"), 200)
+    ctx.expect(
+        await ctx.call(
+            "admin_audit_during_unavailable", "GET", "/admin/audit", params={"limit": 5}
+        ),
+        200,
+    )
+    await _clear_fault(ctx, "unavailable")
+    ctx.expect(await ctx.call("instance_after_unavailable", "GET", "/v1/instance"), 200)
+
+    await _inject_fault(ctx, "stream_disconnect")
+    cut = await probe_stream(ctx, "stream_disconnect_503")
+    ctx.expect(cut, 503, "FAULT_INJECTED")
+    ctx.check(
+        "stream_disconnect_uses_detail_envelope",
+        _top_key(cut) == "detail",
+        f"top key {_top_key(cut)}",
+    )
+    await _clear_fault(ctx, "stream_disconnect")
+
+    base = await ctx.call(
+        "instance_before_latency", "GET", "/v1/instance", volatile=True
+    )
+    await _inject_fault(ctx, "latency")
+    slow = await ctx.call("instance_latency", "GET", "/v1/instance", volatile=True)
+    health = await ctx.call("health_latency", "GET", "/v1/health", volatile=True)
+    await _clear_fault(ctx, "latency")
+    delta = slow.elapsed_ms - base.elapsed_ms
+    ctx.manifest["timings"]["latency_fault_default_delta_ms"] = round(delta, 1)
+    ctx.manifest["timings"]["latency_fault_health_ms"] = round(health.elapsed_ms, 1)
+    ctx.check(
+        "latency_applied", slow.status == 200 and delta >= 100, f"delta {delta:.0f} ms"
+    )
+    ctx.check(
+        "latency_health_bypass",
+        health.elapsed_ms + 100 <= slow.elapsed_ms,
+        f"health {health.elapsed_ms:.0f} ms vs instance {slow.elapsed_ms:.0f} ms",
+    )
+
+    await _inject_fault(ctx, "error_rate")
+    hit, attempts = await call_until_status(
+        ctx, "instance_error_rate_503", "/v1/instance", 503, 40
+    )
+    ctx.manifest["timings"]["error_rate_attempts_to_first_503"] = attempts
+    ctx.check(
+        "instance_error_rate_503",
+        hit is not None and envelope_code(hit.body) == "FAULT_INJECTED",
+        f"no 503 in {attempts} attempts",
+    )
+    await _clear_fault(ctx, "error_rate")
+
+    after = await ctx.call("instance_after_faults", "GET", "/v1/instance")
+    ctx.check(
+        "instance_after_faults",
+        after.status == 200 and not is_stale(after.headers),
+        f"{after.status}",
+    )
+    if ctx.sse is not None:
+        ctx.manifest["findings"]["sse_segments_after_faults"] = [
+            {"status": seg.status, "lines": len(seg.lines), "error": seg.error}
+            for seg in ctx.sse.segments
+        ]
+
+
 Section = Callable[[SmokeContext], Awaitable[None]]
 SECTIONS: list[tuple[str, Section]] = [
     ("preflight", section_preflight),
     ("reads", section_reads),
     ("allocations", section_allocations),
     ("events", section_events),
+    ("faults", section_faults),
 ]
 
 
