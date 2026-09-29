@@ -133,9 +133,13 @@ class DecisionService:
                 s.add(IntentRow(rec_id=rec_id, leg=0, idempotency_key=body.idempotency_key, body=body.model_dump(),
                                 body_hash=body_hash(body.model_dump()), status="SUBMITTING", created_at=now, updated_at=now))  # fmt: skip
         except (_AlreadyClaimed, IntegrityError):
-            m.OPERATOR_ACTIONS.labels("approve_duplicate").inc()
             row = await self.db.get_rec(rec_id)
             assert row is not None
+            if row.status not in ("APPROVED", "EXECUTED"):  # superseded/expired meanwhile
+                raise DecisionError(
+                    409, "REC_NOT_ACTIONABLE", f"recommendation is {row.status}"
+                ) from None
+            m.OPERATOR_ACTIONS.labels("approve_duplicate").inc()
             return await self._result(row)
         m.OPERATOR_ACTIONS.labels("approve").inc()
         await self.db.audit("recommendation.approved", actor, {"rec_id": rec_id, "quantity": qty, "note": note,

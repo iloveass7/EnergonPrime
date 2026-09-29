@@ -1,0 +1,26 @@
+groups:
+  - name: fuelops
+    rules:
+      - alert: SimulatorCircuitOpen
+        expr: sim_circuit_state == 2
+        for: 30s
+        labels: { severity: critical }
+        annotations: { summary: "Simulator circuit open for 30s" }
+      - alert: SimulatorStale
+        expr: increase(sim_stale_responses_total[1m]) > 0
+        labels: { severity: warning }
+        annotations: { summary: "X-Simulator-Stale seen; execution blocked" }
+      - alert: StreamDown
+        expr: sim_stream_connected == 0
+        for: 1m
+        labels: { severity: warning }
+        annotations: { summary: "SSE down, worker polling" }
+      - alert: ApiP95High
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 0.25
+        for: 2m
+        labels: { severity: warning }
+        annotations: { summary: "API p95 above 250 ms" }
+      - alert: CriticalStockoutRisk
+        expr: risk_keys{level="CRITICAL"} > 0
+        labels: { severity: warning }
+        annotations: { summary: "At least one station-fuel key at CRITICAL (simulated)" }

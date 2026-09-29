@@ -1,4 +1,18 @@
-# Phase 0: the pinned simulator only. Later phases add api, worker and redis (architect.md §9.2).
+# Full stack. `make up` (or `docker compose up -d --build`). Everything shown is SIMULATED.
+# Observability (Prometheus + Grafana): `docker compose --profile observability up -d`.
+x-backend: &backend
+  build: .
+  image: fuelops:local
+  env_file: [{ path: .env, required: false }]
+  environment:
+    SIM_BASE_URL: http://simulator-api:8000
+    REDIS_URL: redis://redis:6379/0
+    APP_ENV: ${APP_ENV:-local}
+  depends_on:
+    simulator-api: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  restart: unless-stopped
+
 services:
   simulator-api:
     image: asifmahmoud414/bup-fuel-supply-simulator:1.0.0@sha256:7067050693f49d377d91ca91f2faa6e63f673f69a69429d4693e78e9c0598e92
@@ -8,3 +22,53 @@ services:
       SIMULATOR_START_MODE: ${SIMULATOR_START_MODE:-paused}
     ports: ["8000:8000"]
     healthcheck: { test: ["CMD", "curl", "-fs", "http://localhost:8000/v1/health"], interval: 5s, retries: 12 }
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    ports: ["6379:6379"]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, retries: 12 }
+
+  worker:
+    <<: *backend
+    command: ["worker"]
+    volumes: ["fuelops-data:/app/data"]
+    healthcheck: { test: ["CMD", "curl", "-fs", "http://localhost:9101/metrics"], interval: 10s, retries: 6 }
+
+  api:
+    <<: *backend
+    command: ["api"]
+    volumes: ["fuelops-data:/app/data"]
+    environment:
+      SIM_BASE_URL: http://simulator-api:8000
+      REDIS_URL: redis://redis:6379/0
+      APP_ENV: ${APP_ENV:-local}
+      API_WORKERS: ${API_WORKERS:-2}
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+    ports: ["8080:8080"]
+    healthcheck: { test: ["CMD", "curl", "-fs", "http://localhost:8080/healthz"], interval: 5s, retries: 12 }
+
+  web:
+    build: ./frontend
+    image: fuelops-web:local
+    depends_on: { api: { condition: service_healthy } }
+    ports: ["3000:80"]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    profiles: ["observability"]
+    volumes: ["./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro", "./ops/alerts.yml:/etc/prometheus/alerts.yml:ro"]
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    profiles: ["observability"]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes: ["./ops/grafana/provisioning:/etc/grafana/provisioning:ro", "./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro"]
+    ports: ["3001:3000"]
+
+volumes:
+  fuelops-data:

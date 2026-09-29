@@ -1,0 +1,3 @@
+apiVersion: 1
+providers:
+  - { name: fuelops, folder: FuelOps, type: file, options: { path: /var/lib/grafana/dashboards } }

@@ -1,0 +1,14 @@
+.venv
+.git
+.env
+.env.*
+!.env.example
+data
+frontend/node_modules
+frontend/dist
+tests
+evidence
+docs
+.superpowers
+.serena
+**/__pycache__

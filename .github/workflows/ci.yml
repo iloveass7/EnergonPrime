@@ -1,0 +1,51 @@
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - run: uv run ruff check fuelops scripts tests
+      - run: uv run mypy fuelops scripts
+      - run: uv run lint-imports
+      - run: uv run pytest tests -q
+      - run: uv run pip-audit --strict || true   # report-only until triaged
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - run: npx tsc -p tsconfig.json
+      - run: npx vite build
+
+  integration:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - run: docker compose up -d --build --wait
+      - run: uv run python scripts/contract_smoke.py --out /tmp/p0-contract
+      - run: uv run python scripts/e2e_smoke.py
+      - name: k6 smoke
+        uses: grafana/setup-k6-action@v1
+      - run: k6 run -e PROFILE=smoke load/k6_api.js
+      - if: always()
+        run: docker compose logs --tail=200 api worker
+      - if: always()
+        run: docker compose down -v
+
+  ci-success:
+    needs: [backend, frontend, integration]
+    runs-on: ubuntu-latest
+    steps: [{ run: echo "all required checks passed" }]

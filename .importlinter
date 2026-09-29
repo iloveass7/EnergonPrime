@@ -1,0 +1,34 @@
+[importlinter]
+root_package = fuelops
+
+[importlinter:contract:pure-core]
+name = domain and intelligence stay pure (no IO layers)
+type = forbidden
+source_modules =
+    fuelops.domain
+    fuelops.intelligence
+forbidden_modules =
+    fuelops.api
+    fuelops.worker
+    fuelops.cache
+    fuelops.persistence
+    fuelops.simclient
+    fuelops.decisions
+
+[importlinter:contract:validator-independent]
+name = replay validator shares no code with the planner
+type = forbidden
+source_modules =
+    fuelops.intelligence.validate
+forbidden_modules =
+    fuelops.intelligence.allocation
+
+[importlinter:contract:test-plane-isolated]
+name = decision code never reaches the admin test plane
+type = forbidden
+source_modules =
+    fuelops.decisions
+    fuelops.worker
+    fuelops.intelligence
+forbidden_modules =
+    fuelops.simclient.admin

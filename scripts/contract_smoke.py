@@ -315,11 +315,7 @@ class SseRecorder:
             self._task.cancel()
             done, _ = await asyncio.wait({self._task}, timeout=timeout_s)
             stopped = bool(done)
-            if (
-                done
-                and not self._task.cancelled()
-                and self._task.exception() is not None
-            ):
+            if done and not self._task.cancelled() and self._task.exception() is not None:
                 exc = self._task.exception()
                 self.crash = f"{type(exc).__name__}: {exc}"
         for seg in self.segments:
@@ -405,9 +401,7 @@ class SmokeContext:
         """Build an Exchange from a response whose body has already been read."""
         body, body_text = _decode(resp)
         headers: dict[str, str | None] = {
-            k.lower(): v
-            for k, v in resp.headers.items()
-            if k.lower() not in DROPPED_HEADERS
+            k.lower(): v for k, v in resp.headers.items() if k.lower() not in DROPPED_HEADERS
         }
         headers.setdefault("x-simulator-stale", None)
         return Exchange(
@@ -431,9 +425,7 @@ class SmokeContext:
         print(f"  {'PASS' if ok else 'FAIL'}  {name}" + ("" if ok else f": {detail}"))
         return bool(ok)
 
-    def expect(
-        self, ex: Exchange, status: int | tuple[int, ...], code: str | None = None
-    ) -> bool:
+    def expect(self, ex: Exchange, status: int | tuple[int, ...], code: str | None = None) -> bool:
         """Check an exchange's status (and envelope code); the check is named after the fixture."""
         wanted = status if isinstance(status, tuple) else (status,)
         got_code = envelope_code(ex.body)
@@ -489,9 +481,7 @@ async def section_preflight(ctx: SmokeContext) -> None:
     if not has_admin:
         raise SmokeAbort("openapi.json lacks admin paths — stop and ask")
 
-    ctx.expect(
-        await ctx.call("admin_faults_clear_start", "POST", "/admin/faults/clear"), 200
-    )
+    ctx.expect(await ctx.call("admin_faults_clear_start", "POST", "/admin/faults/clear"), 200)
     ctx.expect(await ctx.call("admin_reset", "POST", "/admin/reset"), 200)
     ctx.expect(await ctx.call("admin_pause", "POST", "/admin/pause"), 200)
 
@@ -504,8 +494,7 @@ async def section_preflight(ctx: SmokeContext) -> None:
     )
     ctx.current_tick = body.get("tick")
     ctx.manifest["instance"] = {
-        k: body.get(k)
-        for k in ("seed", "scenario_id", "scenario_version", "tick_minutes")
+        k: body.get(k) for k in ("seed", "scenario_id", "scenario_version", "tick_minutes")
     }
 
 
@@ -518,9 +507,7 @@ async def section_reads(ctx: SmokeContext) -> None:
     ctx.check("admin_steps_advance_ticks", tick == 4, f"tick after 4 steps = {tick}")
     if ctx.sse is not None:
         ok = await ctx.sse.wait_for(event="simulation.tick", at_least=4, timeout_s=3.0)
-        ctx.check(
-            "sse_tick_after_step", ok, f"{ctx.sse.count('simulation.tick')} tick events"
-        )
+        ctx.check("sse_tick_after_step", ok, f"{ctx.sse.count('simulation.tick')} tick events")
 
     lists: dict[str, Exchange] = {}
     for name, path in (
@@ -565,15 +552,11 @@ async def section_reads(ctx: SmokeContext) -> None:
         one = await ctx.call(f"{singular}_by_id", "GET", f"/v1/{kind}/{first_id}")
         ctx.check(
             f"{singular}_by_id",
-            one.status == 200
-            and isinstance(one.body, dict)
-            and one.body.get("id") == first_id,
+            one.status == 200 and isinstance(one.body, dict) and one.body.get("id") == first_id,
             f"got {one.status}",
         )
         ctx.expect(
-            await ctx.call(
-                f"{singular}_unknown_404", "GET", f"/v1/{kind}/does-not-exist"
-            ),
+            await ctx.call(f"{singular}_unknown_404", "GET", f"/v1/{kind}/does-not-exist"),
             404,
             "NOT_FOUND",
         )
@@ -622,9 +605,7 @@ def other_station(
     topology: Mapping[str, Mapping[str, dict[str, Any]]], route: Mapping[str, Any]
 ) -> str:
     """A station the route does not serve, for provoking ROUTE_MISMATCH."""
-    return next(
-        sid for sid in topology["stations"] if sid != route["destination_station_id"]
-    )
+    return next(sid for sid in topology["stations"] if sid != route["destination_station_id"])
 
 
 def _available_routes(
@@ -656,9 +637,7 @@ def destination_overflow(
         )
         if 0 < qty <= limit:
             return route, qty
-    raise SmokeAbort(
-        f"no route can overflow a station's {fuel} headroom within its limits"
-    )
+    raise SmokeAbort(f"no route can overflow a station's {fuel} headroom within its limits")
 
 
 def dispatch_overflow(
@@ -674,9 +653,7 @@ def dispatch_overflow(
         for route in _available_routes(topology):
             if route["source_depot_id"] != depot_id:
                 continue
-            qty = min(
-                route["max_shipment"], math.floor(_headroom(topology, route, fuel))
-            )
+            qty = min(route["max_shipment"], math.floor(_headroom(topology, route, fuel)))
             if qty < 1:
                 continue
             legs.append((route, qty))
@@ -748,9 +725,7 @@ async def section_allocations(ctx: SmokeContext) -> None:
         "source_depot_id": "does-not-exist",
     }
     ctx.expect(
-        await ctx.call(
-            "alloc_unknown_depot_404", "POST", "/v1/allocations", json=bad_depot
-        ),
+        await ctx.call("alloc_unknown_depot_404", "POST", "/v1/allocations", json=bad_depot),
         404,
         "NOT_FOUND",
     )
@@ -759,17 +734,13 @@ async def section_allocations(ctx: SmokeContext) -> None:
         "destination_station_id": other_station(ctx.topology, route),
     }
     ctx.expect(
-        await ctx.call(
-            "alloc_route_mismatch_409", "POST", "/v1/allocations", json=mismatch
-        ),
+        await ctx.call("alloc_route_mismatch_409", "POST", "/v1/allocations", json=mismatch),
         409,
         "ROUTE_MISMATCH",
     )
     too_big = _alloc_body(route, "p0-cap-1", route["max_shipment"] + 1)
     ctx.expect(
-        await ctx.call(
-            "alloc_route_capacity_409", "POST", "/v1/allocations", json=too_big
-        ),
+        await ctx.call("alloc_route_capacity_409", "POST", "/v1/allocations", json=too_big),
         409,
         "ROUTE_CAPACITY_EXCEEDED",
     )
@@ -784,9 +755,7 @@ async def section_allocations(ctx: SmokeContext) -> None:
         "VALIDATION",
     )
 
-    cancel = await ctx.call(
-        "alloc_cancel", "POST", f"/v1/allocations/{alloc_id}/cancel"
-    )
+    cancel = await ctx.call("alloc_cancel", "POST", f"/v1/allocations/{alloc_id}/cancel")
     cancel_status = cancel.body.get("status") if isinstance(cancel.body, dict) else None
     ctx.check(
         "alloc_cancel",
@@ -794,16 +763,12 @@ async def section_allocations(ctx: SmokeContext) -> None:
         f"got {cancel.status} {cancel_status}",
     )
     ctx.expect(
-        await ctx.call(
-            "alloc_cancel_again_409", "POST", f"/v1/allocations/{alloc_id}/cancel"
-        ),
+        await ctx.call("alloc_cancel_again_409", "POST", f"/v1/allocations/{alloc_id}/cancel"),
         409,
         "CANNOT_CANCEL",
     )
     ctx.expect(
-        await ctx.call(
-            "alloc_cancel_unknown_404", "POST", "/v1/allocations/999999/cancel"
-        ),
+        await ctx.call("alloc_cancel_unknown_404", "POST", "/v1/allocations/999999/cancel"),
         404,
         "ALLOCATION_NOT_FOUND",
     )
@@ -819,9 +784,7 @@ async def section_allocations(ctx: SmokeContext) -> None:
     await ctx.step(int(route["transit_ticks"]) + 2)
     ledger = await ctx.call("allocations_after_lifecycle", "GET", "/v1/allocations")
     states = (
-        {a.get("id"): a.get("status") for a in ledger.body}
-        if isinstance(ledger.body, list)
-        else {}
+        {a.get("id"): a.get("status") for a in ledger.body} if isinstance(ledger.body, list) else {}
     )
     ctx.check(
         "allocations_after_lifecycle",
@@ -863,9 +826,7 @@ async def _capacity_probes(ctx: SmokeContext) -> None:
     ctx.manifest["findings"]["dispatch_probe"] = {
         "depot_id": depot_id,
         "legs": [[r["id"], q] for r, q in legs],
-        "dispatch_capacity_per_tick": world["depots"][depot_id][
-            "dispatch_capacity_per_tick"
-        ],
+        "dispatch_capacity_per_tick": world["depots"][depot_id]["dispatch_capacity_per_tick"],
     }
     accepted: list[Any] = []
     for i, (leg_route, leg_qty) in enumerate(legs[:-1], start=1):
@@ -888,9 +849,7 @@ async def _capacity_probes(ctx: SmokeContext) -> None:
         409,
         "DISPATCH_CAPACITY_EXCEEDED",
     )
-    for i, alloc_id in enumerate(
-        accepted, start=1
-    ):  # refund, so later sections see normal stock
+    for i, alloc_id in enumerate(accepted, start=1):  # refund, so later sections see normal stock
         ctx.expect(
             await ctx.call(
                 f"alloc_dispatch_leg_{i}_cancel",
@@ -920,9 +879,7 @@ async def _run_event(
         "duration_ticks": 2,
         "parameters": parameters,
     }
-    created = await ctx.call(
-        f"admin_event_{label}", "POST", "/admin/events", json=event
-    )
+    created = await ctx.call(f"admin_event_{label}", "POST", "/admin/events", json=event)
     ctx.expect(created, (200, 201))
     event_id = created.body.get("id") if isinstance(created.body, dict) else None
     await ctx.step(1)
@@ -945,9 +902,7 @@ async def _await_resolved(ctx: SmokeContext, label: str, event_id: Any) -> None:
         if _statuses(poll).get(event_id) == "RESOLVED":
             ctx.check(f"{label}_resolved", True)
             return
-    ctx.check(
-        f"{label}_resolved", False, f"event {event_id} not RESOLVED within 3 ticks"
-    )
+    ctx.check(f"{label}_resolved", False, f"event {event_id} not RESOLVED within 3 ticks")
 
 
 async def section_events(ctx: SmokeContext) -> None:
@@ -965,9 +920,7 @@ async def section_events(ctx: SmokeContext) -> None:
         "/v1/routes",
         "DISRUPTED",
     )
-    ctx.check(
-        "route_disruption_no_filter_key_affects_none", affected == [], f"{affected}"
-    )
+    ctx.check("route_disruption_no_filter_key_affects_none", affected == [], f"{affected}")
     await _await_resolved(ctx, "route_disruption_no_filter_key", eid)
 
     eid, affected = await _run_event(
@@ -993,9 +946,7 @@ async def section_events(ctx: SmokeContext) -> None:
         "/v1/routes",
         "DISRUPTED",
     )
-    ctx.check(
-        "route_disruption_targets_route", affected == [route["id"]], f"{affected}"
-    )
+    ctx.check("route_disruption_targets_route", affected == [route["id"]], f"{affected}")
     ctx.expect(
         await ctx.call(
             "alloc_route_disrupted_409",
@@ -1107,9 +1058,7 @@ async def _inject_fault(
 
 
 async def _clear_fault(ctx: SmokeContext, kind: str) -> None:
-    ctx.expect(
-        await ctx.call(f"admin_faults_clear_{kind}", "POST", "/admin/faults/clear"), 200
-    )
+    ctx.expect(await ctx.call(f"admin_faults_clear_{kind}", "POST", "/admin/faults/clear"), 200)
 
 
 async def section_faults(ctx: SmokeContext) -> None:
@@ -1156,9 +1105,7 @@ async def section_faults(ctx: SmokeContext) -> None:
     )
     await _clear_fault(ctx, "stream_disconnect")
 
-    base = await ctx.call(
-        "instance_before_latency", "GET", "/v1/instance", volatile=True
-    )
+    base = await ctx.call("instance_before_latency", "GET", "/v1/instance", volatile=True)
     await _inject_fault(ctx, "latency", {"delay_ms": LATENCY_DELAY_MS})
     slow = await ctx.call("instance_latency", "GET", "/v1/instance", volatile=True)
     health = await ctx.call("health_latency", "GET", "/v1/health", volatile=True)
@@ -1177,18 +1124,12 @@ async def section_faults(ctx: SmokeContext) -> None:
         f"health {health.elapsed_ms:.0f} ms vs instance {slow.elapsed_ms:.0f} ms",
     )
 
-    await _inject_fault(
-        ctx, "error_rate", {"rate": 1.0}
-    )  # rate 1.0 keeps the run deterministic
-    hit, attempts = await call_until_status(
-        ctx, "instance_error_rate_503", "/v1/instance", 503, 3
-    )
+    await _inject_fault(ctx, "error_rate", {"rate": 1.0})  # rate 1.0 keeps the run deterministic
+    hit, attempts = await call_until_status(ctx, "instance_error_rate_503", "/v1/instance", 503, 3)
     ctx.manifest["timings"]["error_rate_attempts_to_first_503"] = attempts
     ctx.check(
         "instance_error_rate_503",
-        hit is not None
-        and attempts == 1
-        and envelope_code(hit.body) == "FAULT_INJECTED",
+        hit is not None and attempts == 1 and envelope_code(hit.body) == "FAULT_INJECTED",
         f"first 503 after {attempts} attempts (hit={hit is not None})",
     )
     await _clear_fault(ctx, "error_rate")
@@ -1217,38 +1158,26 @@ def _keepalive_gap_s(rec: SseRecorder) -> float | None:
 
 async def section_finale(ctx: SmokeContext) -> None:
     if ctx.sse is not None:
-        kept = await ctx.sse.wait_for(
-            comment="keepalive", timeout_s=SSE_KEEPALIVE_WAIT_S
-        )
+        kept = await ctx.sse.wait_for(comment="keepalive", timeout_s=SSE_KEEPALIVE_WAIT_S)
         ctx.manifest["timings"]["sse_keepalive_gap_s"] = _keepalive_gap_s(ctx.sse)
-        ctx.check(
-            "sse_keepalive", kept, f"no keepalive within {SSE_KEEPALIVE_WAIT_S:.0f} s"
-        )
+        ctx.check("sse_keepalive", kept, f"no keepalive within {SSE_KEEPALIVE_WAIT_S:.0f} s")
 
     audit = await ctx.call("admin_audit", "GET", "/admin/audit", params={"limit": 50})
-    ctx.check(
-        "admin_audit", _is_list(audit) and len(audit.body or []) > 0, f"{audit.status}"
-    )
+    ctx.check("admin_audit", _is_list(audit) and len(audit.body or []) > 0, f"{audit.status}")
 
     # run advances the wall-clock-paced clock, so both bodies are volatile
     ctx.expect(await ctx.call("admin_run", "POST", "/admin/run", volatile=True), 200)
-    ctx.expect(
-        await ctx.call("admin_pause_final", "POST", "/admin/pause", volatile=True), 200
-    )
+    ctx.expect(await ctx.call("admin_pause_final", "POST", "/admin/pause", volatile=True), 200)
 
     notices = ctx.sse.count("simulator.notice") if ctx.sse is not None else 0
     ctx.expect(await ctx.call("admin_reset_final", "POST", "/admin/reset"), 200)
     ctx.current_tick = 0
     if ctx.sse is not None:
-        ok = await ctx.sse.wait_for(
-            event="simulator.notice", at_least=notices + 1, timeout_s=3.0
-        )
+        ok = await ctx.sse.wait_for(event="simulator.notice", at_least=notices + 1, timeout_s=3.0)
         ctx.check("sse_reset_notice", ok, "no simulator.notice after /admin/reset")
     final = await ctx.call("instance_final", "GET", "/v1/instance")
     final_tick = final.body.get("tick") if isinstance(final.body, dict) else None
-    ctx.check(
-        "instance_final", final.status == 200 and final_tick == 0, f"tick {final_tick}"
-    )
+    ctx.check("instance_final", final.status == 200 and final_tick == 0, f"tick {final_tick}")
     if ctx.sse is not None:
         missing = [n for n in SSE_EVENT_NAMES if ctx.sse.count(n) == 0]
         ctx.check("sse_all_event_names_seen", not missing, f"missing {missing}")
@@ -1306,11 +1235,7 @@ async def _start_sse(ctx: SmokeContext) -> None:
     ctx.sse = SseRecorder(ctx.client)
     ctx.sse.start()
     connected = await ctx.sse.wait_for(comment="connected", timeout_s=5.0)
-    first = (
-        ctx.sse.segments[0].lines[0]
-        if ctx.sse.segments and ctx.sse.segments[0].lines
-        else None
-    )
+    first = ctx.sse.segments[0].lines[0] if ctx.sse.segments and ctx.sse.segments[0].lines else None
     ctx.check(
         "sse_connected_comment_first",
         connected and first == ": connected",
@@ -1327,9 +1252,7 @@ async def _cleanup(client: httpx.AsyncClient) -> None:
             print(f"  WARN  cleanup {path} failed: {exc}", file=sys.stderr)
 
 
-def _write_manifest(
-    ctx: SmokeContext, out_dir: Path, meta: Mapping[str, Any]
-) -> dict[str, Any]:
+def _write_manifest(ctx: SmokeContext, out_dir: Path, meta: Mapping[str, Any]) -> dict[str, Any]:
     manifest = {
         "fixture_version": FIXTURE_VERSION,
         "provenance": PROVENANCE,
@@ -1367,9 +1290,7 @@ async def run_smoke(
                 if name == "preflight":
                     await _start_sse(ctx)
             except Exception as exc:  # noqa: BLE001 - any failure aborts the run, cleanup still runs
-                ctx.check(
-                    f"section_{name}_completed", False, f"{type(exc).__name__}: {exc}"
-                )
+                ctx.check(f"section_{name}_completed", False, f"{type(exc).__name__}: {exc}")
                 aborted = True
                 break
     finally:
@@ -1393,9 +1314,7 @@ async def run_smoke(
 
 def _run_quiet(cmd: list[str]) -> str | None:
     try:
-        out = subprocess.run(
-            cmd, capture_output=True, text=True, check=True, timeout=10
-        )
+        out = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=10)
     except (OSError, subprocess.SubprocessError):
         return None
     return out.stdout.strip() or None
@@ -1411,9 +1330,7 @@ def git_meta(runner: Callable[[list[str]], str | None] = _run_quiet) -> dict[str
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description=__doc__.splitlines()[0] if __doc__ else None
-    )
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument(
@@ -1427,13 +1344,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     out = args.out.resolve()
     if args.compare_to is not None and args.compare_to.resolve() == out:
-        parser.error(
-            "--compare-to must differ from --out: the run rewrites --out first"
-        )
+        parser.error("--compare-to must differ from --out: the run rewrites --out first")
     if args.sections and out == DEFAULT_OUT.resolve():
-        parser.error(
-            "--section runs are partial: pass --out <scratch dir> to keep fixtures"
-        )
+        parser.error("--section runs are partial: pass --out <scratch dir> to keep fixtures")
 
     meta = {
         "image": IMAGE,
@@ -1465,9 +1378,7 @@ def main(argv: list[str] | None = None) -> int:
             "against": str(args.compare_to),
             "diffs": diffs,
         }
-        print(
-            f"DETERMINISM vs {args.compare_to}: {'identical' if not diffs else 'DIFFERS'}"
-        )
+        print(f"DETERMINISM vs {args.compare_to}: {'identical' if not diffs else 'DIFFERS'}")
         for diff in diffs:
             print(f"  DIFF  {diff}")
         if diffs:
@@ -1478,8 +1389,7 @@ def main(argv: list[str] | None = None) -> int:
         stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
         report = EVIDENCE_DIR / f"contract-smoke-{stamp}.json"
         report.write_text(
-            json.dumps({**manifest, "exit_code": code}, indent=2, ensure_ascii=False)
-            + "\n",
+            json.dumps({**manifest, "exit_code": code}, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
         print(f"evidence: {report}")
