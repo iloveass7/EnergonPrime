@@ -4,7 +4,7 @@ Phases from `docs/pipeline.md` §14. Each phase is ticked only when its "done wh
 
 | | Phase | Done when | Status | Evidence |
 |---|---|---|---|---|
-| [ ] | **0 Contract recon** | contract smoke passes from one script | verified; awaiting code review | `evidence/phase-0/contract-smoke-20260929T052805Z.json`, `…T052823Z.json` (determinism), `docs/contract-findings.md` |
+| [x] | **0 Contract recon** | contract smoke passes from one script | done 2026-09-29 (code review: 9 findings open, see below) | `evidence/phase-0/contract-smoke-20260929T052805Z.json`, `…T052823Z.json` (determinism), `docs/contract-findings.md` |
 | [ ] | 1 Backend slice | dashboard reflects live state with `meta` and age | not started | |
 | [ ] | 2 Operator shell | Playwright smoke green | not started | |
 | [ ] | 3 Sync & lifecycle | scenario I + reset test pass | not started | |
@@ -28,3 +28,4 @@ uv run pytest tests/unit tests/contract -q
 
 - Admin event/fault `parameters` keys (e.g. which routes a `route_disruption` targets) are not documented in `docs/`; `{}` affects no entity. Needed before Phase 6 scenarios. See `docs/contract-findings.md`.
 - `CLAUDE.md` names `docs/simulator-guide.md` as the top source of truth; that file does not exist.
+- Phase 0 code review (high, 2026-09-29) left 9 open findings on `scripts/contract_smoke.py`, most important: SSE `stop()` runs before fault cleanup in `run_smoke`'s `finally`, and `--compare-to` without `--out` compares the committed fixtures with themselves.
