@@ -41,3 +41,8 @@ dev = [
     "import-linter",
     "pip-audit",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "--strict-markers"
