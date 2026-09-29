@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* Control-room palette: cool tinted neutrals (hue 255) + one teal signal accent (replaces sky).
-   Status hues (rose/orange/amber/emerald) stay Tailwind defaults and carry meaning only. */
+/* Control-room palette, ISA-101 style: normal state stays gray, color is reserved for abnormal
+   state (rose > orange > amber by priority) and teal marks operator actions and selection only.
+   Neutrals are tinted toward hue 255; "sky" is remapped to the teal accent. */
 @theme {
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -9,9 +10,9 @@
   --color-slate-50: oklch(0.975 0.004 255);
   --color-slate-100: oklch(0.945 0.006 255);
   --color-slate-200: oklch(0.885 0.009 255);
-  --color-slate-300: oklch(0.8 0.012 255);
-  --color-slate-400: oklch(0.7 0.014 255);
-  --color-slate-500: oklch(0.6 0.016 255);
+  --color-slate-300: oklch(0.82 0.012 255);
+  --color-slate-400: oklch(0.74 0.014 255);
+  --color-slate-500: oklch(0.66 0.016 255); /* lowest text tone: 4.6:1 on slate-800, 5.8:1 on slate-900 */
   --color-slate-600: oklch(0.47 0.018 255);
   --color-slate-700: oklch(0.37 0.018 255);
   --color-slate-800: oklch(0.285 0.016 255);
@@ -32,19 +33,23 @@ body { @apply bg-slate-950 text-slate-100 antialiased; font-feature-settings: "t
 
 @utility num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); letter-spacing: -0.01em; }
 @utility card { @apply rounded-xl border border-slate-800 bg-slate-900 p-4; }
-@utility btn-base { @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950; }
+@utility focus-ring { @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950; }
+@utility btn-base { @apply focus-ring inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40; }
 @utility btn { @apply btn-base; }
+/* One solid primary per surface; secondary (teal outline) for repeated row actions. */
 @utility btn-primary { @apply btn-base bg-sky-400 text-slate-950 hover:bg-sky-300 active:bg-sky-500; }
+@utility btn-secondary { @apply btn-base border border-sky-400/40 text-sky-200 hover:border-sky-400/70 hover:bg-sky-400/10 active:bg-sky-400/20; }
 @utility btn-ghost { @apply btn-base border border-slate-700 text-slate-200 hover:border-slate-600 hover:bg-slate-800 active:bg-slate-700; }
 @utility btn-danger { @apply btn-base border border-rose-500/50 text-rose-200 hover:bg-rose-500/15 active:bg-rose-500/25; }
-@utility field { @apply rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400/30; }
+@utility field { @apply rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-slate-100 transition-colors duration-150 placeholder:text-slate-500 hover:border-slate-600 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-400/30 aria-invalid:border-rose-400 aria-invalid:ring-rose-400/30; }
 
 @layer base {
-  th { @apply pb-2 pr-3 text-left text-xs font-medium text-slate-400; }
-  td { @apply py-2 pr-3 text-sm; }
-  tbody tr { @apply transition-colors duration-100; }
+  th { @apply whitespace-nowrap border-b border-slate-800 pb-2 pr-4 text-left text-xs font-medium text-slate-400 last:pr-0; }
+  td { @apply py-2 pr-4 text-sm last:pr-0; }
+  tbody tr { @apply border-t border-slate-800 transition-colors duration-100 first:border-t-0; }
   tbody tr:hover { @apply bg-slate-800/30; }
   h1, h2, h3 { text-wrap: balance; }
+  dialog::backdrop { background: oklch(0.16 0.012 255 / 0.78); backdrop-filter: blur(3px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

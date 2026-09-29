@@ -3,7 +3,8 @@ import { expect, test } from "@playwright/test";
 test("operator console shows live state and every view renders", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("SIMULATED", { exact: true }).first()).toBeVisible();
-  await expect(page.locator("header").getByText(/^tick \d+/)).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("header").getByText("Tick", { exact: true })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("header .num").first()).toHaveText(/^\d+$/);
   await expect(page.getByText("Service level", { exact: true })).toBeVisible();
   for (const view of ["Network", "Allocations", "Alerts", "Decisions", "System Health"]) {
     await page.getByRole("button", { name: new RegExp(`^${view}`) }).click();

@@ -228,4 +228,6 @@ export const fmt = {
   pct: (v: number | null | undefined, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d)}%`),
   h: (v: number | null | undefined) => (v == null ? "none in horizon" : `${v.toFixed(1)} h`),
   name: (id: string) => id.replace(/^(station|depot|route|region)-/, "").replace(/-/g, " → "),
+  /** STOCKOUT_RISK → "Stockout risk" */
+  label: (s: string) => { const t = s.replace(/_/g, " ").toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); },
 };
