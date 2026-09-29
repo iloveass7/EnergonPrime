@@ -44,14 +44,10 @@ def test_call_until_status_records_only_the_hit(tmp_path) -> None:
     ex, attempts = _run(
         handler,
         tmp_path,
-        lambda ctx: call_until_status(
-            ctx, "instance_error_rate_503", "/v1/instance", 503, 5
-        ),
+        lambda ctx: call_until_status(ctx, "instance_error_rate_503", "/v1/instance", 503, 5),
     )
     assert (ex.status, attempts) == (503, 3)
-    assert [p.name for p in tmp_path.glob("*.json")] == [
-        "001_instance_error_rate_503.json"
-    ]
+    assert [p.name for p in tmp_path.glob("*.json")] == ["001_instance_error_rate_503.json"]
 
 
 def test_call_until_status_gives_up_without_recording(tmp_path) -> None:

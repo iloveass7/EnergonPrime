@@ -6,9 +6,7 @@ from pathlib import Path
 from scripts.contract_smoke import compare_dirs
 
 
-def _fixture(
-    name: str, body: object, *, volatile: bool = False, **extra: object
-) -> dict:
+def _fixture(name: str, body: object, *, volatile: bool = False, **extra: object) -> dict:
     return {
         "name": name,
         "volatile": volatile,
@@ -84,6 +82,4 @@ def test_compare_dirs_reports_changed_sse_sequence(tmp_path) -> None:
 def test_compare_dirs_reports_missing_fixture(tmp_path) -> None:
     a = _write(tmp_path / "a", [_fixture("health", {}), _fixture("routes", [])])
     b = _write(tmp_path / "b", [_fixture("health", {})])
-    assert compare_dirs(a, b) == [
-        "fixture set/order differs: missing ['routes'], extra []"
-    ]
+    assert compare_dirs(a, b) == ["fixture set/order differs: missing ['routes'], extra []"]

@@ -9,9 +9,7 @@ import scripts.contract_smoke as smoke
 
 
 def _client(handler) -> httpx.AsyncClient:
-    return httpx.AsyncClient(
-        base_url="http://sim.test", transport=httpx.MockTransport(handler)
-    )
+    return httpx.AsyncClient(base_url="http://sim.test", transport=httpx.MockTransport(handler))
 
 
 def test_cleanup_runs_when_recorder_task_crashed(tmp_path, monkeypatch) -> None:

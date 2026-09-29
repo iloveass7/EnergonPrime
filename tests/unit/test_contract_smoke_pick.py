@@ -13,9 +13,7 @@ def _station(inv: float, cap: float) -> dict:
     return {"capacity": {"DIESEL": cap}, "inventory": {"DIESEL": inv}}
 
 
-def _route(
-    rid: str, station: str, max_shipment: float, status: str = "AVAILABLE"
-) -> dict:
+def _route(rid: str, station: str, max_shipment: float, status: str = "AVAILABLE") -> dict:
     return {
         "id": rid,
         "source_depot_id": "d1",
@@ -55,9 +53,7 @@ def test_no_feasible_route_aborts() -> None:
 
 
 def test_other_station_differs_from_route_destination() -> None:
-    topo = _topology(
-        [_route("r1", "s1", 7000)], {"s1": _station(0, 1), "s2": _station(0, 1)}
-    )
+    topo = _topology([_route("r1", "s1", 7000)], {"s1": _station(0, 1), "s2": _station(0, 1)})
     assert other_station(topo, topo["routes"]["r1"]) == "s2"
 
 

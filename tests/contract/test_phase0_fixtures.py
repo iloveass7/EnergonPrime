@@ -23,10 +23,7 @@ def test_manifest_all_passed(manifest: dict) -> None:
 
 
 def test_required_fixtures_present() -> None:
-    names = [
-        p.name.split("_", 1)[1].removesuffix(".json")
-        for p in FIXTURES.glob("[0-9]*.json")
-    ]
+    names = [p.name.split("_", 1)[1].removesuffix(".json") for p in FIXTURES.glob("[0-9]*.json")]
     for required in REQUIRED_FIXTURES:
         assert names.count(required) == 1, required
 
