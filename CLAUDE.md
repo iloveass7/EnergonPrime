@@ -9,7 +9,8 @@ Intelligent decision-support platform operating against the official **BUP Fuel 
 
 ## Source of truth (overrides everything below on conflict)
 
-Precedence: docs/simulator-guide.md > docs/pipeline.md > docs/architect.md > docs/prd.md > defaults below.
+Precedence: docs/simulator-guide.md > docs/hackathon-brief.md > docs/pipeline.md > docs/architect.md > docs/prd.md > defaults below.
+Where the guide and the running image disagree, the image wins; measured differences live in docs/contract-findings.md.
 pipeline.md §0.3 and §0.4 REPLACE the older forecast/LP/DB design in architect.md and prd.md.
 If docs conflict, stop and ask. Current phase: docs/PROGRESS.md.
 Never load architect.md or prd.md whole. Grep headings; read only the sections the phase references.
