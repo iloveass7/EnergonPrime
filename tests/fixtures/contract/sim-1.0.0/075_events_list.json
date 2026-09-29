@@ -1,0 +1,68 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "events_list",
+  "section": "events",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/events",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "484",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": [
+      {
+        "id": 4,
+        "type": "station_outage",
+        "start_tick": 17,
+        "end_tick": 19,
+        "status": "RESOLVED",
+        "parameters": {
+          "station_ids": [
+            "station-mirpur"
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "type": "route_disruption",
+        "start_tick": 14,
+        "end_tick": 16,
+        "status": "RESOLVED",
+        "parameters": {
+          "route_ids": [
+            "route-gazipur-mirpur"
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "type": "route_disruption",
+        "start_tick": 11,
+        "end_tick": 13,
+        "status": "RESOLVED",
+        "parameters": {
+          "route_ids": []
+        }
+      },
+      {
+        "id": 1,
+        "type": "route_disruption",
+        "start_tick": 8,
+        "end_tick": 10,
+        "status": "RESOLVED",
+        "parameters": {}
+      }
+    ],
+    "body_text": null
+  },
+  "sim_tick": 20,
+  "elapsed_ms": 2.0
+}

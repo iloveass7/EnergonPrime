@@ -1,0 +1,37 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_route_disrupted_409",
+  "section": "events",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations",
+    "query": {},
+    "body": {
+      "idempotency_key": "p0-disrupted-1",
+      "source_depot_id": "depot-gazipur",
+      "destination_station_id": "station-mirpur",
+      "route_id": "route-gazipur-mirpur",
+      "fuel_type": "DIESEL",
+      "quantity": 100
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-length": "67",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "ROUTE_DISRUPTED",
+        "message": "Route unavailable"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 15,
+  "elapsed_ms": 3.2
+}

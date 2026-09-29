@@ -1,0 +1,39 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_dispatch_leg_1_cancel",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations/3/cancel",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "329",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "id": 3,
+      "idempotency_key": "p0-dispatch-1",
+      "source_depot_id": "depot-gazipur",
+      "destination_station_id": "station-mirpur",
+      "route_id": "route-gazipur-mirpur",
+      "fuel_type": "DIESEL",
+      "quantity": 5990.0,
+      "created_tick": 8,
+      "departure_tick": null,
+      "expected_arrival_tick": null,
+      "actual_arrival_tick": null,
+      "status": "CANCELLED",
+      "failure_reason": null
+    },
+    "body_text": null
+  },
+  "sim_tick": 8,
+  "elapsed_ms": 3.3
+}

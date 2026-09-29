@@ -1,0 +1,91 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "admin_audit_during_unavailable",
+  "section": "faults",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/admin/audit",
+    "query": {
+      "limit": 5
+    },
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "1028",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": [
+      {
+        "id": 46,
+        "wall_time": "2026-09-29T05:40:41.333750",
+        "sim_time": "2026-01-01T05:00:00",
+        "tick": 20,
+        "action": "fault.created",
+        "entity_type": "fault",
+        "entity_id": "2",
+        "result": "OK",
+        "metadata_json": {
+          "type": "unavailable"
+        }
+      },
+      {
+        "id": 45,
+        "wall_time": "2026-09-29T05:40:41.328595",
+        "sim_time": "2026-01-01T05:00:00",
+        "tick": 20,
+        "action": "fault.clear_all",
+        "entity_type": null,
+        "entity_id": null,
+        "result": "OK",
+        "metadata_json": {}
+      },
+      {
+        "id": 44,
+        "wall_time": "2026-09-29T05:40:41.323143",
+        "sim_time": "2026-01-01T05:00:00",
+        "tick": 20,
+        "action": "fault.created",
+        "entity_type": "fault",
+        "entity_id": "1",
+        "result": "OK",
+        "metadata_json": {
+          "type": "stale_data"
+        }
+      },
+      {
+        "id": 43,
+        "wall_time": "2026-09-29T05:40:41.311132",
+        "sim_time": "2026-01-01T04:45:00",
+        "tick": 19,
+        "action": "simulation.tick",
+        "entity_type": "instance",
+        "entity_id": "1",
+        "result": "OK",
+        "metadata_json": {
+          "tick": 19
+        }
+      },
+      {
+        "id": 42,
+        "wall_time": "2026-09-29T05:40:41.311104",
+        "sim_time": "2026-01-01T04:45:00",
+        "tick": 19,
+        "action": "event.resolved",
+        "entity_type": "event",
+        "entity_id": "4",
+        "result": "OK",
+        "metadata_json": {
+          "type": "station_outage"
+        }
+      }
+    ],
+    "body_text": null
+  },
+  "sim_tick": 20,
+  "elapsed_ms": 3.7
+}

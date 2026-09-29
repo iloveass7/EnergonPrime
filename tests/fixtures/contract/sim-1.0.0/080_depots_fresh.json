@@ -1,0 +1,60 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "depots_fresh",
+  "section": "faults",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/depots",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "496",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": [
+      {
+        "id": "depot-gazipur",
+        "name": "Gazipur Depot",
+        "region_id": "region-dhaka",
+        "status": "OPEN",
+        "dispatch_capacity_per_tick": 12000.0,
+        "capacity": {
+          "DIESEL": 90000,
+          "PETROL": 70000,
+          "OCTANE": 45000
+        },
+        "inventory": {
+          "DIESEL": 77500.0,
+          "PETROL": 59000.0,
+          "OCTANE": 26000
+        }
+      },
+      {
+        "id": "depot-patiya",
+        "name": "Patiya Depot",
+        "region_id": "region-chattogram",
+        "status": "OPEN",
+        "dispatch_capacity_per_tick": 11000.0,
+        "capacity": {
+          "DIESEL": 85000,
+          "PETROL": 65000,
+          "OCTANE": 40000
+        },
+        "inventory": {
+          "DIESEL": 71000.0,
+          "PETROL": 42000,
+          "OCTANE": 24000
+        }
+      }
+    ],
+    "body_text": null
+  },
+  "sim_tick": 20,
+  "elapsed_ms": 2.0
+}

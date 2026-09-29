@@ -14,7 +14,7 @@
       "destination_station_id": "station-mirpur",
       "route_id": "route-gazipur-mirpur",
       "fuel_type": "DIESEL",
-      "quantity": 999
+      "quantity": 500.0
     }
   },
   "response": {

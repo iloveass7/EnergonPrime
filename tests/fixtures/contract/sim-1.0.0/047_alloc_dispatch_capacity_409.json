@@ -1,0 +1,37 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_dispatch_capacity_409",
+  "section": "allocations",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations",
+    "query": {},
+    "body": {
+      "idempotency_key": "p0-dispatch-2",
+      "source_depot_id": "depot-gazipur",
+      "destination_station_id": "station-tongi",
+      "route_id": "route-gazipur-tongi",
+      "fuel_type": "DIESEL",
+      "quantity": 6500.0
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-length": "102",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "DISPATCH_CAPACITY_EXCEEDED",
+        "message": "Depot dispatch capacity per tick exceeded"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 8,
+  "elapsed_ms": 2.8
+}

@@ -1,0 +1,1210 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "image": "asifmahmoud414/bup-fuel-supply-simulator:1.0.0",
+  "image_digest": "asifmahmoud414/bup-fuel-supply-simulator@sha256:7067050693f49d377d91ca91f2faa6e63f673f69a69429d4693e78e9c0598e92",
+  "git_sha": "340c018c2578bf1dc23477f71e620685874b9284",
+  "git_dirty": false,
+  "base_url": "http://localhost:8000",
+  "instance": {
+    "seed": 12345,
+    "scenario_id": "baseline",
+    "scenario_version": "1.0",
+    "tick_minutes": 15
+  },
+  "findings": {
+    "demand_history_limit_2001": {
+      "status": 200,
+      "rows": 48,
+      "code": null
+    },
+    "happy_path": {
+      "route_id": "route-gazipur-mirpur",
+      "fuel": "DIESEL",
+      "quantity": 1000
+    },
+    "replay_status": 201,
+    "dispatch_probe": {
+      "depot_id": "depot-gazipur",
+      "legs": [
+        [
+          "route-gazipur-mirpur",
+          5990
+        ],
+        [
+          "route-gazipur-tongi",
+          6500.0
+        ]
+      ],
+      "dispatch_capacity_per_tick": 12000.0
+    },
+    "event_route_disruption_no_filter_key_affects": [],
+    "event_route_disruption_empty_filter_affects": [],
+    "event_route_disruption_affects": [
+      "route-gazipur-mirpur"
+    ],
+    "event_station_outage_affects": [
+      "station-mirpur"
+    ],
+    "sse_segments_after_faults": [
+      {
+        "status": 200,
+        "lines": 92,
+        "error": null
+      }
+    ]
+  },
+  "timings": {
+    "latency_fault_delta_ms": 303.0,
+    "latency_fault_health_ms": 2.1,
+    "error_rate_attempts_to_first_503": 1,
+    "sse_keepalive_gap_s": 14.81
+  },
+  "sections_run": [
+    "preflight",
+    "reads",
+    "allocations",
+    "events",
+    "faults",
+    "finale"
+  ],
+  "fixtures": [
+    {
+      "seq": 1,
+      "name": "health",
+      "file": "001_health.json",
+      "sha256": "9c359a12dbe4fe49805efe33c4a3956ab83e2535406d203f93fff2599ae0daf5"
+    },
+    {
+      "seq": 2,
+      "name": "openapi",
+      "file": "002_openapi.json",
+      "sha256": "91f748b7c1cdf660123a1832525018ac3b01f9b2baf523ea214edad38bd2f25c"
+    },
+    {
+      "seq": 3,
+      "name": "admin_faults_clear_start",
+      "file": "003_admin_faults_clear_start.json",
+      "sha256": "2502699e203546ac63aa1e24aed730471d0796d78e1cb8926b7ddde8129811d1"
+    },
+    {
+      "seq": 4,
+      "name": "admin_reset",
+      "file": "004_admin_reset.json",
+      "sha256": "2b36ec628c1b645a8b2f5a4f8e06ee72f24ce8c4ebe15980726f775169ba7238"
+    },
+    {
+      "seq": 5,
+      "name": "admin_pause",
+      "file": "005_admin_pause.json",
+      "sha256": "a16152a8aff9d954a735f339e0d92b4ba2addac6178a44119ebb34d502236482"
+    },
+    {
+      "seq": 6,
+      "name": "instance_initial",
+      "file": "006_instance_initial.json",
+      "sha256": "daedf9b2314b8cc4c7e9f189ab6d663a21eafe39a560cf32e601200cc873d00c"
+    },
+    {
+      "seq": 7,
+      "name": "admin_step_01",
+      "file": "007_admin_step_01.json",
+      "sha256": "e02b62369c24c6e8bfe89ba21677ab19634d4f930859e70194afa3ba43fbd3ac"
+    },
+    {
+      "seq": 8,
+      "name": "admin_step_02",
+      "file": "008_admin_step_02.json",
+      "sha256": "9333c4f18e71481c0384053cfd9ff348cb6877f402bd6b9b4dc606e42172cecc"
+    },
+    {
+      "seq": 9,
+      "name": "admin_step_03",
+      "file": "009_admin_step_03.json",
+      "sha256": "8b5ff6a6a2f7024d7b3627a03125680bf0e0f3dc8573f369ae487d7d17788a8a"
+    },
+    {
+      "seq": 10,
+      "name": "admin_step_04",
+      "file": "010_admin_step_04.json",
+      "sha256": "ab755da3c4df1e5dad6ce57f6581410299b0a33f91f4315756c279845993b7a8"
+    },
+    {
+      "seq": 11,
+      "name": "regions",
+      "file": "011_regions.json",
+      "sha256": "4c472cf5d91d88867d0456acbffbe6fb3815cdd4be109e94a73dc80ca2934eb6"
+    },
+    {
+      "seq": 12,
+      "name": "depots",
+      "file": "012_depots.json",
+      "sha256": "f50692d2610b73932304b0c594bab0dd9c5651d823f3834d0d48e0d29d958c55"
+    },
+    {
+      "seq": 13,
+      "name": "stations",
+      "file": "013_stations.json",
+      "sha256": "5ff02a751301addcf5e0aee6783643ba940336128ee213d996be4490ed6dec57"
+    },
+    {
+      "seq": 14,
+      "name": "routes",
+      "file": "014_routes.json",
+      "sha256": "b75e39752786d047599684bad718a6321bfd062396a0b02a5c2d071c808b22dc"
+    },
+    {
+      "seq": 15,
+      "name": "supply_arrivals",
+      "file": "015_supply_arrivals.json",
+      "sha256": "0b0f4b74c60c6d885d766e04af949eed3cce80f1bc7e4806ad85a2e4c0cbfcba"
+    },
+    {
+      "seq": 16,
+      "name": "events_initial",
+      "file": "016_events_initial.json",
+      "sha256": "29aea58aa4cdd3a86a385671b31875b532bb6676cb6b25d7b9a11ca908bc5e72"
+    },
+    {
+      "seq": 17,
+      "name": "allocations_initial",
+      "file": "017_allocations_initial.json",
+      "sha256": "10df52451bceaaa5199b2e418ccf2ec0380e7cc05829830a9395facc98c71b77"
+    },
+    {
+      "seq": 18,
+      "name": "metrics_initial",
+      "file": "018_metrics_initial.json",
+      "sha256": "5787fe5093acaac38111405d4a5ecdfa5f3c8a993598f33d84f438ca4dc99cfe"
+    },
+    {
+      "seq": 19,
+      "name": "instance_after_steps",
+      "file": "019_instance_after_steps.json",
+      "sha256": "9e4a7539eac6d155839f94e4d5729871accb1b83be1993665c58d11c058c0361"
+    },
+    {
+      "seq": 20,
+      "name": "depot_by_id",
+      "file": "020_depot_by_id.json",
+      "sha256": "bb4ddb088dc8fe17f59c3253685e81e1e608cf82d6faa0f914e31f5558c4f3b8"
+    },
+    {
+      "seq": 21,
+      "name": "depot_unknown_404",
+      "file": "021_depot_unknown_404.json",
+      "sha256": "3e931b3495c76fce6b1a96897ec06826bd5d36606bcb4ee9be45abcf774a8c4c"
+    },
+    {
+      "seq": 22,
+      "name": "station_by_id",
+      "file": "022_station_by_id.json",
+      "sha256": "1e1157595a3f1f3878406b7ad0cca35d3da220bc2417ce5c112434a534c892d9"
+    },
+    {
+      "seq": 23,
+      "name": "station_unknown_404",
+      "file": "023_station_unknown_404.json",
+      "sha256": "ef11998b6420be9705de72dc65be3fb3689c421887c1299f8df126852015e3aa"
+    },
+    {
+      "seq": 24,
+      "name": "demand_history",
+      "file": "024_demand_history.json",
+      "sha256": "31c40ad77a02fcf89d368a2917bcaab3c810a688023c6f0a1074d04050fe9945"
+    },
+    {
+      "seq": 25,
+      "name": "demand_history_limit_over",
+      "file": "025_demand_history_limit_over.json",
+      "sha256": "943d3df542cc12bd49f893f5c3982e4db8a6955fb5587a1f1857bf71223b295e"
+    },
+    {
+      "seq": 26,
+      "name": "alloc_create",
+      "file": "026_alloc_create.json",
+      "sha256": "6e556b5da45405018e1f28a852b1f2be8208e721ad9856a163b28ab4489c6fcf"
+    },
+    {
+      "seq": 27,
+      "name": "alloc_replay",
+      "file": "027_alloc_replay.json",
+      "sha256": "352dffd794402e7de7c7856c32f5472008be070e1d01ed283c8fd6a4774bd862"
+    },
+    {
+      "seq": 28,
+      "name": "alloc_key_mismatch_409",
+      "file": "028_alloc_key_mismatch_409.json",
+      "sha256": "2e17206615cafaad983aed044c493741bd7084c5d888c3965032e44fcc16bea7"
+    },
+    {
+      "seq": 29,
+      "name": "alloc_unknown_depot_404",
+      "file": "029_alloc_unknown_depot_404.json",
+      "sha256": "517488899ae4f68d314c840ef13a7fa0515a3f2e6e71006d3978563552796e42"
+    },
+    {
+      "seq": 30,
+      "name": "alloc_route_mismatch_409",
+      "file": "030_alloc_route_mismatch_409.json",
+      "sha256": "4e0ce1b886ef9de38a07a568b54f322afc40b4203de9648535232e0106f1e996"
+    },
+    {
+      "seq": 31,
+      "name": "alloc_route_capacity_409",
+      "file": "031_alloc_route_capacity_409.json",
+      "sha256": "2f5cb18a7c5077c4d0abe655a5e281d22088030babd14dd52f7c60eeddfd8307"
+    },
+    {
+      "seq": 32,
+      "name": "alloc_invalid_422",
+      "file": "032_alloc_invalid_422.json",
+      "sha256": "29ecff4b86fbbeaa841304180a15a7e989be05a2d64f1e1525908a72127c6707"
+    },
+    {
+      "seq": 33,
+      "name": "alloc_cancel",
+      "file": "033_alloc_cancel.json",
+      "sha256": "f327f50f398559dc5cf8e13f963d502f7e04c8a26c1a8e742c56e6c8df5e671d"
+    },
+    {
+      "seq": 34,
+      "name": "alloc_cancel_again_409",
+      "file": "034_alloc_cancel_again_409.json",
+      "sha256": "d9155e5e3d01fdc1a04dcad8790fc233f4ab9d167fac900f9d4c7491fcf0c5c8"
+    },
+    {
+      "seq": 35,
+      "name": "alloc_cancel_unknown_404",
+      "file": "035_alloc_cancel_unknown_404.json",
+      "sha256": "3e7866bbecf6a3d5cb14f205192dde3a1675dfec513994aae09cf11567ab672e"
+    },
+    {
+      "seq": 36,
+      "name": "alloc_lifecycle_create",
+      "file": "036_alloc_lifecycle_create.json",
+      "sha256": "cf6773f66224428e3826d4376ab8a82b88b3f75603dbc6af48c60a1e5eee3f2f"
+    },
+    {
+      "seq": 37,
+      "name": "admin_step_05",
+      "file": "037_admin_step_05.json",
+      "sha256": "73836bde5be5a11e9df13cff5d98e3822904315349da18b0c05ce2623ed53e26"
+    },
+    {
+      "seq": 38,
+      "name": "admin_step_06",
+      "file": "038_admin_step_06.json",
+      "sha256": "844a95a5fb07fe26e8848de8436365ced83e55487a5af35c5d3b866f5bac1c86"
+    },
+    {
+      "seq": 39,
+      "name": "admin_step_07",
+      "file": "039_admin_step_07.json",
+      "sha256": "ae6ce88fe879a43e569dd4e13cf55ca4d29cd787ccc2e41e4422a7ffdac23c3a"
+    },
+    {
+      "seq": 40,
+      "name": "admin_step_08",
+      "file": "040_admin_step_08.json",
+      "sha256": "1d388baee436de9ead25f0021c80fd290b7490c8cbbabb94ce9846ca892ee335"
+    },
+    {
+      "seq": 41,
+      "name": "allocations_after_lifecycle",
+      "file": "041_allocations_after_lifecycle.json",
+      "sha256": "7dfc42c220d6e87cbd0bfaeff9e126d7060ef7a378146957952cd77dcf7ea19d"
+    },
+    {
+      "seq": 42,
+      "name": "metrics_after_lifecycle",
+      "file": "042_metrics_after_lifecycle.json",
+      "sha256": "1b5856bacd5724498087653c535def4f39ddef0a0a2619df557322228f951f52"
+    },
+    {
+      "seq": 43,
+      "name": "stations_before_capacity_probes",
+      "file": "043_stations_before_capacity_probes.json",
+      "sha256": "bd0490e579f10fe43c7019e8a7d4f1077f09fda34dcac21174521e140b9f8a87"
+    },
+    {
+      "seq": 44,
+      "name": "depots_before_capacity_probes",
+      "file": "044_depots_before_capacity_probes.json",
+      "sha256": "d7e56db2cdece60ee6a3fcd2c27842a1546b555dd2f0634ee4c409a16260b029"
+    },
+    {
+      "seq": 45,
+      "name": "alloc_destination_capacity_409",
+      "file": "045_alloc_destination_capacity_409.json",
+      "sha256": "8e9ae1ffe4b7b740a6617f19749d2070e38560b94977e66732f0902c15b6f582"
+    },
+    {
+      "seq": 46,
+      "name": "alloc_dispatch_leg_1",
+      "file": "046_alloc_dispatch_leg_1.json",
+      "sha256": "985d7a25aefeb4b9067fc95a82e8ba26903a25b42303f40564fecae8c4b1558f"
+    },
+    {
+      "seq": 47,
+      "name": "alloc_dispatch_capacity_409",
+      "file": "047_alloc_dispatch_capacity_409.json",
+      "sha256": "bf4a77e4c2f4c54a1c30f8a88cfd91259eb1e9505eb9663a14701bbf4708af0a"
+    },
+    {
+      "seq": 48,
+      "name": "alloc_dispatch_leg_1_cancel",
+      "file": "048_alloc_dispatch_leg_1_cancel.json",
+      "sha256": "e3d4cb62a750ed05e8784a19011529478482f7feff8595ec308fbcd0c6555fd5"
+    },
+    {
+      "seq": 49,
+      "name": "admin_event_route_disruption_no_filter_key",
+      "file": "049_admin_event_route_disruption_no_filter_key.json",
+      "sha256": "277a66a03dee79b4d4ac9a46940b6f98bf6bdf973efe387810ab4751797877f6"
+    },
+    {
+      "seq": 50,
+      "name": "admin_step_09",
+      "file": "050_admin_step_09.json",
+      "sha256": "a2d9f4c83eea56bf30b1bd5b6634d1353a20d6f28bca5d487f880969beee0c45"
+    },
+    {
+      "seq": 51,
+      "name": "events_during_route_disruption_no_filter_key",
+      "file": "051_events_during_route_disruption_no_filter_key.json",
+      "sha256": "8267f0d1174ca6464401ed6b8ea35bf105bc486a48a1836ffe34e16f8571cfc8"
+    },
+    {
+      "seq": 52,
+      "name": "route_disruption_no_filter_key_during",
+      "file": "052_route_disruption_no_filter_key_during.json",
+      "sha256": "f99a5b95c97edd6d7cac4212e942749dbdf52eba4648e44f439dc3db226e6676"
+    },
+    {
+      "seq": 53,
+      "name": "admin_step_10",
+      "file": "053_admin_step_10.json",
+      "sha256": "405199386b86c199a021e92b89be0d88325d7f895e609f8f7883365e6f6e736a"
+    },
+    {
+      "seq": 54,
+      "name": "admin_step_11",
+      "file": "054_admin_step_11.json",
+      "sha256": "af66ac6aa0e9d35d5b0fb1bae09b5b04bf07f4062b243a22397774867fcf043d"
+    },
+    {
+      "seq": 55,
+      "name": "admin_event_route_disruption_empty_filter",
+      "file": "055_admin_event_route_disruption_empty_filter.json",
+      "sha256": "01100ce438f8f8fb27ffc682cf7012e69e26944a935b0a1bfd51bd5f5afddd39"
+    },
+    {
+      "seq": 56,
+      "name": "admin_step_12",
+      "file": "056_admin_step_12.json",
+      "sha256": "3ea601dcefa52e6ac1ab3a81452ced5cd3d028fcf451c22fba8ad4dac8874c3e"
+    },
+    {
+      "seq": 57,
+      "name": "events_during_route_disruption_empty_filter",
+      "file": "057_events_during_route_disruption_empty_filter.json",
+      "sha256": "32815d221c36efd30023cc407e86816ffc5aa5f7ceed549a2b5d635b672bf12d"
+    },
+    {
+      "seq": 58,
+      "name": "route_disruption_empty_filter_during",
+      "file": "058_route_disruption_empty_filter_during.json",
+      "sha256": "7502e131ece006b54fc57c65fb8621ebf1d46eb0f647f03e66e3cf7bc3ec6df8"
+    },
+    {
+      "seq": 59,
+      "name": "admin_step_13",
+      "file": "059_admin_step_13.json",
+      "sha256": "273aee4cb7cfe8273f3e3a875382bf3084922d4def5a04cac4ab37fda7f5ec9b"
+    },
+    {
+      "seq": 60,
+      "name": "admin_step_14",
+      "file": "060_admin_step_14.json",
+      "sha256": "9726ea980de54f9680e6e12f7bd248cb42e43fcb260be2dd18aa1d8cabb5a741"
+    },
+    {
+      "seq": 61,
+      "name": "admin_event_route_disruption",
+      "file": "061_admin_event_route_disruption.json",
+      "sha256": "3319e66331efba70a69dd031a99af49ef1f8ed885ed6777e2618c15830055c56"
+    },
+    {
+      "seq": 62,
+      "name": "admin_step_15",
+      "file": "062_admin_step_15.json",
+      "sha256": "0fa8fb069c2f7791a99ed1fcbf708c0391f0a44bf556a48c1ed797d892d4b739"
+    },
+    {
+      "seq": 63,
+      "name": "events_during_route_disruption",
+      "file": "063_events_during_route_disruption.json",
+      "sha256": "e9d96a1b33d1e3446f66ccb288bb70ca3a32fa3022e638afec80bacba54c6cb4"
+    },
+    {
+      "seq": 64,
+      "name": "route_disruption_during",
+      "file": "064_route_disruption_during.json",
+      "sha256": "bb0cb77dc1a7e083965d5ff369b61b6a92e30434c12d326d955cd62ae8add63f"
+    },
+    {
+      "seq": 65,
+      "name": "alloc_route_disrupted_409",
+      "file": "065_alloc_route_disrupted_409.json",
+      "sha256": "511360ba0fa5e22f03bb52ad7afa7eca8db9bbd96226d8a78427c22e501cca94"
+    },
+    {
+      "seq": 66,
+      "name": "admin_step_16",
+      "file": "066_admin_step_16.json",
+      "sha256": "0dca78ae826800458f0ce5dad922ec3d908bfd09b715673d140c6be5aa57b712"
+    },
+    {
+      "seq": 67,
+      "name": "admin_step_17",
+      "file": "067_admin_step_17.json",
+      "sha256": "236df72db88749f6e928de33eeaa28d9f3f45cd2ccb939ad1552d89d96b6847a"
+    },
+    {
+      "seq": 68,
+      "name": "admin_event_station_outage",
+      "file": "068_admin_event_station_outage.json",
+      "sha256": "cf74f3dc95a67c71cab6b0dd5b89c6e07e2a01783c73c5458f2cfa584830bf32"
+    },
+    {
+      "seq": 69,
+      "name": "admin_step_18",
+      "file": "069_admin_step_18.json",
+      "sha256": "c221f2a8a50ebfe38de6c9a4415eca24a49960116d51cce71ad64d5fbcece255"
+    },
+    {
+      "seq": 70,
+      "name": "events_during_station_outage",
+      "file": "070_events_during_station_outage.json",
+      "sha256": "47a36398dc3f846b8bf22f8fb19c9d86bb9a7a16ef798f53ba3d37bb33fb6d1f"
+    },
+    {
+      "seq": 71,
+      "name": "station_outage_during",
+      "file": "071_station_outage_during.json",
+      "sha256": "cf279bb105b1f117677affbd28a90eec5a0934fd68dee354749145a75659ff93"
+    },
+    {
+      "seq": 72,
+      "name": "alloc_station_closed_409",
+      "file": "072_alloc_station_closed_409.json",
+      "sha256": "1049b664e1f4c5634e26df48cae34c33823e4e69ccdfa03747c86088f4211f46"
+    },
+    {
+      "seq": 73,
+      "name": "admin_step_19",
+      "file": "073_admin_step_19.json",
+      "sha256": "b721eddea3f57b36fe07303ea814c2b2d0265850ee6585e5ea5001baaf73d77c"
+    },
+    {
+      "seq": 74,
+      "name": "admin_step_20",
+      "file": "074_admin_step_20.json",
+      "sha256": "8d4b65ee8e73ee5eb7e8ef01def2a1498ce0f861a194c975d058b2a597ce4398"
+    },
+    {
+      "seq": 75,
+      "name": "events_list",
+      "file": "075_events_list.json",
+      "sha256": "856ef480cf7488f25191a2c5ed2b610189803f3b645e3895b0f9f6a10d615107"
+    },
+    {
+      "seq": 76,
+      "name": "routes_after_events",
+      "file": "076_routes_after_events.json",
+      "sha256": "88715f1928d292473822bcffb43f9e19f88e57692a64e659351c592eb217df97"
+    },
+    {
+      "seq": 77,
+      "name": "admin_fault_stale_data",
+      "file": "077_admin_fault_stale_data.json",
+      "sha256": "7e70ab80a6f6d8252b50875070d20883243bcf2fecd604ac944ab61297ad7485"
+    },
+    {
+      "seq": 78,
+      "name": "depots_stale",
+      "file": "078_depots_stale.json",
+      "sha256": "7a626ed0b89131bf10b8969fdbd8a28c86555319df0f1ca07a49e1b49664bf8c"
+    },
+    {
+      "seq": 79,
+      "name": "admin_faults_clear_stale_data",
+      "file": "079_admin_faults_clear_stale_data.json",
+      "sha256": "b5bd321684be781c5de018d8fdb6c2ab2fcbff6214412dd787c96f7f4579f5fa"
+    },
+    {
+      "seq": 80,
+      "name": "depots_fresh",
+      "file": "080_depots_fresh.json",
+      "sha256": "21b1fb099df76df08ea0c0f2b36f172b87a89ab2e44bce878aeff86f3f6e6ed6"
+    },
+    {
+      "seq": 81,
+      "name": "admin_fault_unavailable",
+      "file": "081_admin_fault_unavailable.json",
+      "sha256": "717c6bc816b38b00aaf2363361853d18994fed0260cf93c12dabce3d1ac13b9a"
+    },
+    {
+      "seq": 82,
+      "name": "instance_unavailable_503",
+      "file": "082_instance_unavailable_503.json",
+      "sha256": "d311d724a9dc93b7568b8f87c56a4472f0a3a24194c9fe249b004ea9da7b4dd4"
+    },
+    {
+      "seq": 83,
+      "name": "health_during_unavailable",
+      "file": "083_health_during_unavailable.json",
+      "sha256": "35e97159b13e25c775007aa27f4006d2bb7055e70a0cfbf24bcd4342a41e7f99"
+    },
+    {
+      "seq": 84,
+      "name": "admin_audit_during_unavailable",
+      "file": "084_admin_audit_during_unavailable.json",
+      "sha256": "937b512b1b6b915258dfd1e62408fa0df8b4dce2bd17af554c8975ef9729674d"
+    },
+    {
+      "seq": 85,
+      "name": "admin_faults_clear_unavailable",
+      "file": "085_admin_faults_clear_unavailable.json",
+      "sha256": "66acd30107a5aa5d374c74eb0b7aa937cd2fae40805aa61b44cd609242cb7d3a"
+    },
+    {
+      "seq": 86,
+      "name": "instance_after_unavailable",
+      "file": "086_instance_after_unavailable.json",
+      "sha256": "d87973a1808e547b826b2a9803fad68348b40ea1e3100cb838956c0471d33252"
+    },
+    {
+      "seq": 87,
+      "name": "admin_fault_stream_disconnect",
+      "file": "087_admin_fault_stream_disconnect.json",
+      "sha256": "33e3d052884b3da5b105f37268701d3d41cfbe6051a4fa47aa75f722ca286e2a"
+    },
+    {
+      "seq": 88,
+      "name": "stream_disconnect_503",
+      "file": "088_stream_disconnect_503.json",
+      "sha256": "dc90d45266f83e0604fbd197c12293a4a68a8166e09e5bdffdd760758abbee99"
+    },
+    {
+      "seq": 89,
+      "name": "admin_faults_clear_stream_disconnect",
+      "file": "089_admin_faults_clear_stream_disconnect.json",
+      "sha256": "6cd7e0a1821ff123b5ed23b538c334fb8368c4ccd7d141ef66188f61c10f91fb"
+    },
+    {
+      "seq": 90,
+      "name": "instance_before_latency",
+      "file": "090_instance_before_latency.json",
+      "sha256": "b68ef4f6f099105ba6743ebe81b2fbc4f55bf216287bb0cf290d6b9e68cc1274"
+    },
+    {
+      "seq": 91,
+      "name": "admin_fault_latency",
+      "file": "091_admin_fault_latency.json",
+      "sha256": "a04774a99710bc150df2ab8ef970dea29e8f51b6058e7d2c33849577cd376ce2"
+    },
+    {
+      "seq": 92,
+      "name": "instance_latency",
+      "file": "092_instance_latency.json",
+      "sha256": "b8088a2528fd6c288c482ba5b6c203fb3f6aac2a5f1ab8a2f8e5896b611352d9"
+    },
+    {
+      "seq": 93,
+      "name": "health_latency",
+      "file": "093_health_latency.json",
+      "sha256": "52f60be30cbe47dc57bddacf73fe6dacacb96c454b1edcdaa34044a8db137368"
+    },
+    {
+      "seq": 94,
+      "name": "admin_faults_clear_latency",
+      "file": "094_admin_faults_clear_latency.json",
+      "sha256": "e49ed487854b33d9819105258327f363f732b3d6f132b81f565e6e83a004ef92"
+    },
+    {
+      "seq": 95,
+      "name": "admin_fault_error_rate",
+      "file": "095_admin_fault_error_rate.json",
+      "sha256": "d188b6ffcfa082124427284deb504668ae8b79fbff6421ac2c147aed253d6d72"
+    },
+    {
+      "seq": 96,
+      "name": "instance_error_rate_503",
+      "file": "096_instance_error_rate_503.json",
+      "sha256": "44d099731492cd793d0c5489e1dc0ca05e6a8b4ecbfedc05436f98607f831a7c"
+    },
+    {
+      "seq": 97,
+      "name": "admin_faults_clear_error_rate",
+      "file": "097_admin_faults_clear_error_rate.json",
+      "sha256": "c79d07f82d31363d05a5edffac82751c74f677c15a0acc04bc364a4600b66748"
+    },
+    {
+      "seq": 98,
+      "name": "instance_after_faults",
+      "file": "098_instance_after_faults.json",
+      "sha256": "079d6347215854539af8da158d70094d67366b3af2782cedba7d30a81ebffc42"
+    },
+    {
+      "seq": 99,
+      "name": "admin_audit",
+      "file": "099_admin_audit.json",
+      "sha256": "9a3761cf0778763d9dff36e84d538e019e8a5340db9d41ec052cf40a2baa972f"
+    },
+    {
+      "seq": 100,
+      "name": "admin_run",
+      "file": "100_admin_run.json",
+      "sha256": "fa16cdf564fd1fd29015e6af198cc82bc5218b0cfa880c16860f6f67d5215bd8"
+    },
+    {
+      "seq": 101,
+      "name": "admin_pause_final",
+      "file": "101_admin_pause_final.json",
+      "sha256": "7fe5d6632b1e326545e8e149b6d53d4b67ad3a7a686c81b6038d0060d58b7000"
+    },
+    {
+      "seq": 102,
+      "name": "admin_reset_final",
+      "file": "102_admin_reset_final.json",
+      "sha256": "1a0d4f8c4dbf4dbda1f3301c480a908f97daf2628f83fe14cf70ff443b25c98f"
+    },
+    {
+      "seq": 103,
+      "name": "instance_final",
+      "file": "103_instance_final.json",
+      "sha256": "459361710e45b69dc0de54a8eba28617bc0a4c6d4a053b07f1a8b1cff39d612a"
+    },
+    {
+      "seq": 104,
+      "name": "sse_stream",
+      "file": "104_sse_stream.json",
+      "sha256": "80e4e55b8bba194fef777b727bab5b9ca5e69e3a28d37825a41c942aca499f4a"
+    }
+  ],
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "got 200 {'status': 'ok', 'database': 'ok', 'simulation': {'status': 'PAUSED', 'tick': 0}}"
+    },
+    {
+      "name": "openapi",
+      "ok": true,
+      "detail": "admin schemas absent (plan Decision 3)"
+    },
+    {
+      "name": "admin_faults_clear_start",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "admin_reset",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "admin_pause",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "instance_initial",
+      "ok": true,
+      "detail": "got 200 {'id': 1, 'scenario_id': 'baseline', 'scenario_version': '1.0', 'seed': 12345, 'sim_time': '2026-01-01T00:00:00', 'tick': 0, 'tick_minutes': 15, 'status': 'PAUSED'}"
+    },
+    {
+      "name": "sse_connected_comment_first",
+      "ok": true,
+      "detail": "first line ': connected'"
+    },
+    {
+      "name": "admin_steps_advance_ticks",
+      "ok": true,
+      "detail": "tick after 4 steps = 4"
+    },
+    {
+      "name": "sse_tick_after_step",
+      "ok": true,
+      "detail": "4 tick events"
+    },
+    {
+      "name": "regions",
+      "ok": true,
+      "detail": "got 200 list"
+    },
+    {
+      "name": "depots",
+      "ok": true,
+      "detail": "got 200 list"
+    },
+    {
+      "name": "stations",
+      "ok": true,
+      "detail": "got 200 list"
+    },
+    {
+      "name": "routes",
+      "ok": true,
+      "detail": "got 200 list"
+    },
+    {
+      "name": "supply_arrivals",
+      "ok": true,
+      "detail": "got 200 list"
+    },
+    {
+      "name": "events_initial",
+      "ok": true,
+      "detail": "got 200 list"
+    },
+    {
+      "name": "allocations_initial",
+      "ok": true,
+      "detail": "got 200 list"
+    },
+    {
+      "name": "regions_non_empty",
+      "ok": true,
+      "detail": "empty list"
+    },
+    {
+      "name": "depots_non_empty",
+      "ok": true,
+      "detail": "empty list"
+    },
+    {
+      "name": "stations_non_empty",
+      "ok": true,
+      "detail": "empty list"
+    },
+    {
+      "name": "routes_non_empty",
+      "ok": true,
+      "detail": "empty list"
+    },
+    {
+      "name": "stale_header_absent_baseline",
+      "ok": true,
+      "detail": "stale on baseline"
+    },
+    {
+      "name": "metrics_initial",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "instance_after_steps",
+      "ok": true,
+      "detail": "tick 4"
+    },
+    {
+      "name": "depot_by_id",
+      "ok": true,
+      "detail": "got 200"
+    },
+    {
+      "name": "depot_unknown_404",
+      "ok": true,
+      "detail": "want (404,) NOT_FOUND got 404 NOT_FOUND"
+    },
+    {
+      "name": "station_by_id",
+      "ok": true,
+      "detail": "got 200"
+    },
+    {
+      "name": "station_unknown_404",
+      "ok": true,
+      "detail": "want (404,) NOT_FOUND got 404 NOT_FOUND"
+    },
+    {
+      "name": "demand_history",
+      "ok": true,
+      "detail": "got 200 with 12 rows"
+    },
+    {
+      "name": "alloc_create",
+      "ok": true,
+      "detail": "got 201 PENDING"
+    },
+    {
+      "name": "alloc_replay",
+      "ok": true,
+      "detail": "got 201 id 1 (created id 1)"
+    },
+    {
+      "name": "alloc_key_mismatch_409",
+      "ok": true,
+      "detail": "want (409,) IDEMPOTENCY_KEY_MISMATCH got 409 IDEMPOTENCY_KEY_MISMATCH"
+    },
+    {
+      "name": "alloc_unknown_depot_404",
+      "ok": true,
+      "detail": "want (404,) NOT_FOUND got 404 NOT_FOUND"
+    },
+    {
+      "name": "alloc_route_mismatch_409",
+      "ok": true,
+      "detail": "want (409,) ROUTE_MISMATCH got 409 ROUTE_MISMATCH"
+    },
+    {
+      "name": "alloc_route_capacity_409",
+      "ok": true,
+      "detail": "want (409,) ROUTE_CAPACITY_EXCEEDED got 409 ROUTE_CAPACITY_EXCEEDED"
+    },
+    {
+      "name": "alloc_invalid_422",
+      "ok": true,
+      "detail": "want (422,) VALIDATION got 422 VALIDATION"
+    },
+    {
+      "name": "alloc_cancel",
+      "ok": true,
+      "detail": "got 200 CANCELLED"
+    },
+    {
+      "name": "alloc_cancel_again_409",
+      "ok": true,
+      "detail": "want (409,) CANNOT_CANCEL got 409 CANNOT_CANCEL"
+    },
+    {
+      "name": "alloc_cancel_unknown_404",
+      "ok": true,
+      "detail": "want (404,) ALLOCATION_NOT_FOUND got 404 ALLOCATION_NOT_FOUND"
+    },
+    {
+      "name": "alloc_lifecycle_create",
+      "ok": true,
+      "detail": "want (201,)  got 201"
+    },
+    {
+      "name": "allocations_after_lifecycle",
+      "ok": true,
+      "detail": "lifecycle ARRIVED, cancelled CANCELLED"
+    },
+    {
+      "name": "metrics_after_lifecycle",
+      "ok": true,
+      "detail": "got 200"
+    },
+    {
+      "name": "alloc_destination_capacity_409",
+      "ok": true,
+      "detail": "want (409,) DESTINATION_CAPACITY_EXCEEDED got 409 DESTINATION_CAPACITY_EXCEEDED"
+    },
+    {
+      "name": "alloc_dispatch_leg_1",
+      "ok": true,
+      "detail": "want (201,)  got 201"
+    },
+    {
+      "name": "alloc_dispatch_capacity_409",
+      "ok": true,
+      "detail": "want (409,) DISPATCH_CAPACITY_EXCEEDED got 409 DISPATCH_CAPACITY_EXCEEDED"
+    },
+    {
+      "name": "alloc_dispatch_leg_1_cancel",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "sse_allocation.status_changed",
+      "ok": true,
+      "detail": "not seen on stream"
+    },
+    {
+      "name": "sse_inventory.updated",
+      "ok": true,
+      "detail": "not seen on stream"
+    },
+    {
+      "name": "admin_event_route_disruption_no_filter_key",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "route_disruption_no_filter_key_active",
+      "ok": true,
+      "detail": "{1: 'ACTIVE'}"
+    },
+    {
+      "name": "route_disruption_no_filter_key_affects_none",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "name": "route_disruption_no_filter_key_resolved",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "admin_event_route_disruption_empty_filter",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "route_disruption_empty_filter_active",
+      "ok": true,
+      "detail": "{2: 'ACTIVE', 1: 'RESOLVED'}"
+    },
+    {
+      "name": "route_disruption_empty_filter_affects_none",
+      "ok": true,
+      "detail": "[] (guide §7.8 predicts all routes)"
+    },
+    {
+      "name": "route_disruption_empty_filter_resolved",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "admin_event_route_disruption",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "route_disruption_active",
+      "ok": true,
+      "detail": "{3: 'ACTIVE', 2: 'RESOLVED', 1: 'RESOLVED'}"
+    },
+    {
+      "name": "route_disruption_targets_route",
+      "ok": true,
+      "detail": "['route-gazipur-mirpur']"
+    },
+    {
+      "name": "alloc_route_disrupted_409",
+      "ok": true,
+      "detail": "want (409,) ROUTE_DISRUPTED got 409 ROUTE_DISRUPTED"
+    },
+    {
+      "name": "route_disruption_resolved",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "admin_event_station_outage",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "station_outage_active",
+      "ok": true,
+      "detail": "{4: 'ACTIVE', 3: 'RESOLVED', 2: 'RESOLVED', 1: 'RESOLVED'}"
+    },
+    {
+      "name": "station_outage_targets_station",
+      "ok": true,
+      "detail": "['station-mirpur']"
+    },
+    {
+      "name": "alloc_station_closed_409",
+      "ok": true,
+      "detail": "want (409,) STATION_CLOSED got 409 STATION_CLOSED"
+    },
+    {
+      "name": "station_outage_resolved",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "events_list",
+      "ok": true,
+      "detail": "{4: 'RESOLVED', 3: 'RESOLVED', 2: 'RESOLVED', 1: 'RESOLVED'}"
+    },
+    {
+      "name": "routes_after_events",
+      "ok": true,
+      "detail": "{'route-gazipur-mirpur': 'AVAILABLE', 'route-gazipur-tongi': 'AVAILABLE', 'route-patiya-karnaphuli': 'AVAILABLE', 'route-patiya-coxsbazar': 'AVAILABLE', 'route-gazipur-karnaphuli': 'AVAILABLE', 'route-patiya-mirpur': 'AVAILABLE'}"
+    },
+    {
+      "name": "admin_fault_stale_data",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "depots_stale",
+      "ok": true,
+      "detail": "{'content-length': '496', 'content-type': 'application/json', 'x-simulator-stale': 'true'}"
+    },
+    {
+      "name": "admin_faults_clear_stale_data",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "depots_fresh",
+      "ok": true,
+      "detail": "{'content-length': '496', 'content-type': 'application/json', 'x-simulator-stale': None}"
+    },
+    {
+      "name": "admin_fault_unavailable",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "instance_unavailable_503",
+      "ok": true,
+      "detail": "want (503,) FAULT_INJECTED got 503 FAULT_INJECTED"
+    },
+    {
+      "name": "unavailable_uses_error_envelope",
+      "ok": true,
+      "detail": "top key error"
+    },
+    {
+      "name": "health_during_unavailable",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "admin_audit_during_unavailable",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "admin_faults_clear_unavailable",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "instance_after_unavailable",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "admin_fault_stream_disconnect",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "stream_disconnect_503",
+      "ok": true,
+      "detail": "want (503,) FAULT_INJECTED got 503 FAULT_INJECTED"
+    },
+    {
+      "name": "stream_disconnect_uses_detail_envelope",
+      "ok": true,
+      "detail": "top key detail"
+    },
+    {
+      "name": "admin_faults_clear_stream_disconnect",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "admin_fault_latency",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "admin_faults_clear_latency",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "latency_applied",
+      "ok": true,
+      "detail": "delta 303 ms for delay_ms=300"
+    },
+    {
+      "name": "latency_health_bypass",
+      "ok": true,
+      "detail": "health 2 ms vs instance 307 ms"
+    },
+    {
+      "name": "admin_fault_error_rate",
+      "ok": true,
+      "detail": "want (200, 201)  got 201"
+    },
+    {
+      "name": "instance_error_rate_503",
+      "ok": true,
+      "detail": "first 503 after 1 attempts (hit=True)"
+    },
+    {
+      "name": "admin_faults_clear_error_rate",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "instance_after_faults",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "sse_keepalive",
+      "ok": true,
+      "detail": "no keepalive within 20 s"
+    },
+    {
+      "name": "admin_audit",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "admin_run",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "admin_pause_final",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "admin_reset_final",
+      "ok": true,
+      "detail": "want (200,)  got 200"
+    },
+    {
+      "name": "sse_reset_notice",
+      "ok": true,
+      "detail": "no simulator.notice after /admin/reset"
+    },
+    {
+      "name": "instance_final",
+      "ok": true,
+      "detail": "tick 0"
+    },
+    {
+      "name": "sse_all_event_names_seen",
+      "ok": true,
+      "detail": "missing []"
+    },
+    {
+      "name": "sse_stop_within_deadline",
+      "ok": true,
+      "detail": "recorder did not stop in 5 s"
+    },
+    {
+      "name": "sse_recorder_healthy",
+      "ok": true,
+      "detail": "None"
+    },
+    {
+      "name": "required_fixtures_recorded",
+      "ok": true,
+      "detail": "missing []"
+    }
+  ],
+  "all_passed": true,
+  "determinism_compare": {
+    "against": "tests/fixtures/contract/sim-1.0.0",
+    "diffs": []
+  },
+  "exit_code": 0
+}

@@ -1,0 +1,40 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "admin_fault_latency",
+  "section": "faults",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/admin/faults",
+    "query": {},
+    "body": {
+      "type": "latency",
+      "duration_seconds": 60,
+      "parameters": {
+        "delay_ms": 300
+      }
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "content-length": "173",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "id": 4,
+      "type": "latency",
+      "start_wall_time": "2026-09-29T05:40:41.360759+00:00",
+      "end_wall_time": "2026-09-29T05:41:41.360759+00:00",
+      "active": true,
+      "parameters": {
+        "delay_ms": 300
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 20,
+  "elapsed_ms": 3.0
+}

@@ -1,0 +1,98 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "station_outage_during",
+  "section": "events",
+  "volatile": false,
+  "request": {
+    "method": "GET",
+    "path": "/v1/stations",
+    "query": {},
+    "body": null
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-length": "1130",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": [
+      {
+        "id": "station-mirpur",
+        "name": "Mirpur Fuel Station",
+        "region_id": "region-dhaka",
+        "status": "OUTAGE",
+        "demand_profile": "urban_high",
+        "demand_multiplier": 1.0,
+        "capacity": {
+          "DIESEL": 15000,
+          "PETROL": 14000,
+          "OCTANE": 9000
+        },
+        "inventory": {
+          "DIESEL": 8457.744,
+          "PETROL": 7690.714,
+          "OCTANE": 4313.663
+        }
+      },
+      {
+        "id": "station-tongi",
+        "name": "Tongi Industrial Station",
+        "region_id": "region-dhaka",
+        "status": "OPEN",
+        "demand_profile": "industrial",
+        "demand_multiplier": 1.0,
+        "capacity": {
+          "DIESEL": 18000,
+          "PETROL": 9000,
+          "OCTANE": 6000
+        },
+        "inventory": {
+          "DIESEL": 9820.126,
+          "PETROL": 5623.277,
+          "OCTANE": 3314.218
+        }
+      },
+      {
+        "id": "station-karnaphuli",
+        "name": "Karnaphuli Highway Station",
+        "region_id": "region-chattogram",
+        "status": "OPEN",
+        "demand_profile": "highway",
+        "demand_multiplier": 1.0,
+        "capacity": {
+          "DIESEL": 14000,
+          "PETROL": 15000,
+          "OCTANE": 9000
+        },
+        "inventory": {
+          "DIESEL": 6942.048,
+          "PETROL": 7833.21,
+          "OCTANE": 4232.85
+        }
+      },
+      {
+        "id": "station-coxsbazar",
+        "name": "Cox's Bazar Regional Station",
+        "region_id": "region-chattogram",
+        "status": "OPEN",
+        "demand_profile": "regional",
+        "demand_multiplier": 1.0,
+        "capacity": {
+          "DIESEL": 12000,
+          "PETROL": 12000,
+          "OCTANE": 7000
+        },
+        "inventory": {
+          "DIESEL": 6557.862,
+          "PETROL": 6481.7,
+          "OCTANE": 3734.609
+        }
+      }
+    ],
+    "body_text": null
+  },
+  "sim_tick": 18,
+  "elapsed_ms": 2.0
+}

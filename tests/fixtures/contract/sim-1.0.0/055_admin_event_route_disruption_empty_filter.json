@@ -1,0 +1,41 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "admin_event_route_disruption_empty_filter",
+  "section": "events",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/admin/events",
+    "query": {},
+    "body": {
+      "type": "route_disruption",
+      "start_tick": 11,
+      "duration_ticks": 2,
+      "parameters": {
+        "route_ids": []
+      }
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "content-length": "115",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "id": 2,
+      "type": "route_disruption",
+      "start_tick": 11,
+      "end_tick": 13,
+      "status": "SCHEDULED",
+      "parameters": {
+        "route_ids": []
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 11,
+  "elapsed_ms": 3.2
+}

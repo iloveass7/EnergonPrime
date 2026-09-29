@@ -1,0 +1,45 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "admin_event_route_disruption",
+  "section": "events",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/admin/events",
+    "query": {},
+    "body": {
+      "type": "route_disruption",
+      "start_tick": 14,
+      "duration_ticks": 2,
+      "parameters": {
+        "route_ids": [
+          "route-gazipur-mirpur"
+        ]
+      }
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "content-length": "137",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "id": 3,
+      "type": "route_disruption",
+      "start_tick": 14,
+      "end_tick": 16,
+      "status": "SCHEDULED",
+      "parameters": {
+        "route_ids": [
+          "route-gazipur-mirpur"
+        ]
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 14,
+  "elapsed_ms": 3.0
+}

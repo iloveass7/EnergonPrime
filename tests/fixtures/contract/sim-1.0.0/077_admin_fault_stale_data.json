@@ -1,0 +1,36 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "admin_fault_stale_data",
+  "section": "faults",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/admin/faults",
+    "query": {},
+    "body": {
+      "type": "stale_data",
+      "duration_seconds": 60,
+      "parameters": {}
+    }
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "content-length": "162",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "id": 1,
+      "type": "stale_data",
+      "start_wall_time": "2026-09-29T05:40:41.322296+00:00",
+      "end_wall_time": "2026-09-29T05:41:41.322296+00:00",
+      "active": true,
+      "parameters": {}
+    },
+    "body_text": null
+  },
+  "sim_tick": 20,
+  "elapsed_ms": 3.9
+}

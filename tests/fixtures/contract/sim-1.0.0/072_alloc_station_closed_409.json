@@ -1,0 +1,37 @@
+{
+  "fixture_version": 1,
+  "provenance": "SIMULATED — recorded from simulator image 1.0.0",
+  "name": "alloc_station_closed_409",
+  "section": "events",
+  "volatile": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/allocations",
+    "query": {},
+    "body": {
+      "idempotency_key": "p0-closed-1",
+      "source_depot_id": "depot-gazipur",
+      "destination_station_id": "station-mirpur",
+      "route_id": "route-gazipur-mirpur",
+      "fuel_type": "DIESEL",
+      "quantity": 100
+    }
+  },
+  "response": {
+    "status": 409,
+    "headers": {
+      "content-length": "68",
+      "content-type": "application/json",
+      "x-simulator-stale": null
+    },
+    "body": {
+      "detail": {
+        "code": "STATION_CLOSED",
+        "message": "Station unavailable"
+      }
+    },
+    "body_text": null
+  },
+  "sim_tick": 18,
+  "elapsed_ms": 2.6
+}
