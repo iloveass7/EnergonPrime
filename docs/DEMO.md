@@ -1,18 +1,19 @@
 # Demo run-sheet (brief §22, ~8 min)
 
 All data is SIMULATED. Before judges arrive: `docker compose up -d`, open http://localhost:3000,
-Test Controls → type `SIMULATE` → **Reset world**, then **Run**. Grafana (optional): `docker compose --profile observability up -d` → :3001.
+Test Controls → type `SIMULATE` → **Reset world**, then **Run**. Clock: `.env` has `SIMULATION_SPEED=1` (1 tick = 15 sim-min per second) and `REC_VALID_TICKS=60`. Grafana (optional): `docker compose --profile observability up -d` → :3001.
 
 | # | Brief step | Do this | Say this |
 |---|---|---|---|
 | 1 | Normal operations | Command Center, sim RUNNING | Status bar: tick, sim time, data age, stream, platform health. Service level ~100%. |
 | 2 | Operator dashboard | Click Network, then back | Depots, stations, routes live from the simulator; worker polls 1 s + SSE, API reads Redis. |
-| 3 | Demand starts increasing | Test Controls → **demand spike dhaka** | Scenario targets explicit stations; nothing hidden. |
+| 3 | Demand starts increasing | Test Controls → **demand spike dhaka**, wait ~20–30 s until the Recommendations badge has held a number for a few seconds (the first one can flicker) | Scenario targets explicit stations; nothing hidden. |
 | 4 | System detects risk | Alerts (count badge rises) | Demand anomaly (robust z > 3), labelled "known demand event". |
 | 5 | Predicts shortage | Command Center → Top risks | Profile forecast (5.1% WAPE) → tick-by-tick projection → stockout hours + probability. |
 | 6 | Recommendation generated | Recommendations | Marginal-benefit greedy under route/depot/capacity constraints, checked by an independent validator. |
-| 7 | Operator inspects | **Review** on top card | No-shipment vs recommended vs runner-up, binding constraint, before/after inventory chart, reasons. |
-| 8 | Allocation simulated | Approve & submit → Confirm | Idempotency key + atomic claim: 3 concurrent approvals = exactly 1 allocation. Allocations tab shows it. |
+| 7 | Operator inspects | Test Controls → **Pause** first, then Recommendations → **Review** on top card. If it shows 0 after pausing: Run, wait 5 s, Pause again | Sim runs 900× real time; pausing gives the operator the hour they would really have. |
+| 7b | | (what's in the dialog) | No-shipment vs recommended vs runner-up, binding constraint, before/after inventory chart, reasons. |
+| 8 | Allocation simulated | Approve & submit → Confirm → Test Controls → **Run** | Idempotency key + atomic claim: 3 concurrent approvals = exactly 1 allocation. Allocations tab shows it. |
 | 9 | Crisis event | Test Controls → **route disruption mirpur** or **combined chattogram** | |
 | 10 | System adapts | Recommendations | Planner re-plans on alternative routes; stale recs are superseded (409 if approved). |
 | 11 | Failure injected | Fault injection → `stale_data` 30 s → Inject | (or terminal: `docker compose stop redis`) |
