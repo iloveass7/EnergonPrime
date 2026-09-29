@@ -15,8 +15,8 @@ import json
 import subprocess
 import sys
 import time
-from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable, Iterable, Mapping
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +31,7 @@ _NORMALIZE_DROP = VOLATILE_BODY_KEYS | {"elapsed_ms"}
 DEFAULT_BASE_URL = "http://localhost:8000"
 DEFAULT_OUT = Path("tests/fixtures/contract/sim-1.0.0")
 HEALTH_WAIT_S = 30.0
+SSE_RECONNECT_S = 0.5
 
 
 @dataclass
@@ -137,6 +138,149 @@ class FixtureWriter:
         return path
 
 
+@dataclass
+class SseEvent:
+    event: str
+    data: Any
+
+
+@dataclass
+class SseSegment:
+    """One connection attempt to /v1/stream: its status and every raw line received."""
+
+    status: int
+    content_type: str | None
+    lines: list[str] = field(default_factory=list)
+    events: list[SseEvent] = field(default_factory=list)
+    error: str | None = None
+
+
+def parse_sse_lines(lines: Iterable[str]) -> tuple[list[SseEvent], list[str]]:
+    """Parse raw SSE lines into (events, comments). A blank line dispatches an event."""
+    events: list[SseEvent] = []
+    comments: list[str] = []
+    name: str | None = None
+    data: list[str] = []
+    for line in lines:
+        if line == "":
+            if data:
+                raw = "\n".join(data)
+                try:
+                    payload: Any = json.loads(raw)
+                except ValueError:
+                    payload = raw
+                events.append(SseEvent(name or "message", payload))
+            name, data = None, []
+        elif line.startswith(":"):
+            comments.append(line[1:].strip())
+        else:
+            key, _, value = line.partition(":")
+            value = value.removeprefix(" ")
+            if key == "event":
+                name = value
+            elif key == "data":
+                data.append(value)
+    return events, comments
+
+
+class SseRecorder:
+    """Records /v1/stream across the whole run; reconnects as a new segment on EOF or error."""
+
+    def __init__(self, client: httpx.AsyncClient) -> None:
+        self.client = client
+        self.segments: list[SseSegment] = []
+        self.line_times: list[list[float]] = []
+        self._stop = asyncio.Event()
+        self._task: asyncio.Task[None] | None = None
+
+    def start(self) -> None:
+        self._task = asyncio.create_task(self._loop())
+
+    async def _loop(self) -> None:
+        while not self._stop.is_set():
+            seg = SseSegment(status=-1, content_type=None)
+            times: list[float] = []
+            try:
+                async with self.client.stream(
+                    "GET", "/v1/stream", timeout=httpx.Timeout(10.0, read=None)
+                ) as resp:
+                    seg.status = resp.status_code
+                    seg.content_type = resp.headers.get("content-type")
+                    self.segments.append(seg)
+                    self.line_times.append(times)
+                    if resp.status_code != 200:
+                        await resp.aread()
+                        seg.lines.append(resp.text)
+                        times.append(time.monotonic())
+                    else:
+                        async for line in resp.aiter_lines():
+                            seg.lines.append(line)
+                            times.append(time.monotonic())
+            except httpx.HTTPError as exc:
+                seg.error = f"{type(exc).__name__}: {exc}"
+                if seg not in self.segments:
+                    self.segments.append(seg)
+                    self.line_times.append(times)
+            try:
+                await asyncio.wait_for(self._stop.wait(), SSE_RECONNECT_S)
+            except TimeoutError:
+                pass
+
+    def _parsed(self) -> tuple[list[SseEvent], list[str]]:
+        events: list[SseEvent] = []
+        comments: list[str] = []
+        for seg in self.segments:
+            if seg.status == 200:
+                seg_events, seg_comments = parse_sse_lines([*seg.lines, ""])
+                events += seg_events
+                comments += seg_comments
+        return events, comments
+
+    def count(self, event: str | None = None, comment: str | None = None) -> int:
+        events, comments = self._parsed()
+        if event is not None:
+            return sum(e.event == event for e in events)
+        return sum(c == comment for c in comments)
+
+    async def wait_for(
+        self,
+        event: str | None = None,
+        comment: str | None = None,
+        timeout_s: float = 3.0,
+        at_least: int = 1,
+    ) -> bool:
+        deadline = time.monotonic() + timeout_s
+        while self.count(event, comment) < at_least:
+            if time.monotonic() > deadline:
+                return False
+            await asyncio.sleep(0.05)
+        return True
+
+    async def stop(self, timeout_s: float = 5.0) -> bool:
+        """Stop recording; True if the loop ended within the deadline."""
+        self._stop.set()
+        stopped = True
+        if self._task is not None:
+            self._task.cancel()
+            try:
+                await asyncio.wait_for(self._task, timeout_s)
+            except asyncio.CancelledError:
+                pass
+            except TimeoutError:
+                stopped = False
+        for seg in self.segments:
+            if seg.status == 200:
+                seg.events = parse_sse_lines(seg.lines)[0]
+        return stopped
+
+    def to_fixture(self) -> dict[str, Any]:
+        _, comments = self._parsed()
+        return {
+            "segments": [asdict(seg) for seg in self.segments],
+            "comments_seen": sorted(set(comments)),
+        }
+
+
 class SmokeAbort(Exception):
     """A precondition failed; later sections would only produce noise."""
 
@@ -164,6 +308,7 @@ class SmokeContext:
         self.openapi: dict[str, Any] = {}
         self.topology: dict[str, dict[str, dict[str, Any]]] = {}
         self.manifest: dict[str, Any] = {"instance": {}, "findings": {}, "timings": {}}
+        self.sse: SseRecorder | None = None
         self._steps = 0
 
     async def call(
@@ -278,6 +423,15 @@ SECTIONS: list[tuple[str, Section]] = [
 ]
 
 
+async def _start_sse(ctx: SmokeContext) -> None:
+    """Open the stream recorder; the first line on the wire must be the connect comment."""
+    ctx.sse = SseRecorder(ctx.client)
+    ctx.sse.start()
+    connected = await ctx.sse.wait_for(comment="connected", timeout_s=5.0)
+    first = ctx.sse.segments[0].lines[0] if ctx.sse.segments and ctx.sse.segments[0].lines else None
+    ctx.check("sse_connected_comment_first", connected and first == ": connected", f"first line {first!r}")
+
+
 async def _cleanup(client: httpx.AsyncClient) -> None:
     """Never leave a fault active or the clock running, whatever happened."""
     for path in ("/admin/faults/clear", "/admin/pause"):
@@ -321,10 +475,15 @@ async def run_smoke(
             print(f"[{name}]")
             try:
                 await section(ctx)
+                if name == "preflight":
+                    await _start_sse(ctx)
             except Exception as exc:  # noqa: BLE001 - any failure aborts the run, cleanup still runs
                 ctx.check(f"section_{name}_completed", False, f"{type(exc).__name__}: {exc}")
                 break
     finally:
+        if ctx.sse is not None:
+            ctx.check("sse_stop_within_deadline", await ctx.sse.stop(), "recorder did not stop in 5 s")
+            ctx.writer.write_raw("sse_stream", "sse", ctx.sse.to_fixture())
         await _cleanup(client)
         ctx.manifest["sections_run"] = sections_run
         manifest = _write_manifest(ctx, out_dir, meta or {})
