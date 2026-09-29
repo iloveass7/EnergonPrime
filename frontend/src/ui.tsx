@@ -49,29 +49,37 @@ export function AllocStatus({ status }: { status: string }) {
 export function Stat({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "good" | "warn" | "bad" }) {
   const color = tone === "bad" ? "text-rose-300" : tone === "warn" ? "text-amber-200" : tone === "good" ? "text-emerald-300" : "text-slate-100";
   return (
-    <div className="card">
-      <div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
-      <div className={`num mt-1 text-2xl font-semibold ${color}`}>{value}</div>
-      {hint && <div className="mt-1 text-xs text-slate-400">{hint}</div>}
+    <div className="bg-slate-900 px-4 py-3.5">
+      <div className="text-[13px] text-slate-400">{label}</div>
+      <div className={`num mt-1 text-2xl font-medium ${color}`}>{value}</div>
+      {hint && <div className="mt-0.5 text-xs text-slate-500">{hint}</div>}
     </div>
   );
+}
+
+/** One continuous strip of stats; 1px gaps draw the dividers at any wrap. */
+export function StatStrip({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`grid gap-px overflow-hidden rounded-xl border border-slate-800 bg-slate-800 ${className}`}>{children}</div>;
 }
 
 export function Bar({ value, max, level }: { value: number; max: number; level?: string }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (100 * value) / max)) : 0;
   const color = level === "CRITICAL" ? "bg-rose-500" : level === "HIGH" ? "bg-orange-400" : level === "MEDIUM" ? "bg-amber-300" : "bg-emerald-400";
   return (
-    <div className="h-2 w-full rounded bg-slate-800" role="meter" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
-      <div className={`h-2 rounded ${color}`} style={{ width: `${pct}%` }} />
+    <div className="h-1.5 w-full rounded-full bg-slate-800" role="meter" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+      <div className={`h-1.5 rounded-full ${color} transition-[width] duration-300 ease-out`} style={{ width: `${pct}%` }} />
     </div>
   );
 }
 
-export function Section({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) {
+export function Section({ title, sub, right, children }: { title: string; sub?: ReactNode; right?: ReactNode; children: ReactNode }) {
   return (
     <section className="card">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">{title}</h2>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-[15px] font-semibold text-slate-100">{title}</h2>
+          {sub && <p className="mt-0.5 text-xs text-slate-500">{sub}</p>}
+        </div>
         {right}
       </div>
       {children}
@@ -80,13 +88,13 @@ export function Section({ title, right, children }: { title: string; right?: Rea
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <div className="py-6 text-center text-sm text-slate-500">{children}</div>;
+  return <div className="rounded-lg border border-dashed border-slate-800 py-6 text-center text-sm text-slate-500">{children}</div>;
 }
 
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
-      <div className="card w-full max-w-lg bg-slate-900" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
+      <div className="card w-full max-w-2xl shadow-2xl shadow-black/50" onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-semibold">{title}</h3>
           <button className="btn-ghost" onClick={onClose} aria-label="Close">✕</button>
