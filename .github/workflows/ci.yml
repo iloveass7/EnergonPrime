@@ -2,6 +2,11 @@ name: ci
 on:
   push: { branches: [main] }
   pull_request:
+  workflow_dispatch:
+
+# Source → Build → Test (backend, frontend, integration) → Package (GHCR) → Deploy → Health Check
+env:
+  REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/energonprime
 
 jobs:
   backend:
@@ -52,3 +57,48 @@ jobs:
     needs: [backend, frontend, integration]
     runs-on: ubuntu-latest
     steps: [{ run: echo "all required checks passed" }]
+
+  package:
+    # Only a green main build is published; every image is tagged with its commit for rollback.
+    needs: [ci-success]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - name: Build and push images
+        run: |
+          IMG=$(echo "$REGISTRY_IMAGE" | tr '[:upper:]' '[:lower:]')
+          docker build -t $IMG/fuelops:${{ github.sha }} -t $IMG/fuelops:latest .
+          docker build -t $IMG/web:${{ github.sha }} -t $IMG/web:latest frontend
+          for t in fuelops:${{ github.sha }} fuelops:latest web:${{ github.sha }} web:latest; do docker push $IMG/$t; done
+
+  deploy:
+    # Deploys the published images (no local build) to a fresh environment and gates on health.
+    needs: [package]
+    runs-on: ubuntu-latest
+    environment: demo
+    permissions: { contents: read, packages: read }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - name: Deploy published images
+        run: |
+          IMG=$(echo "$REGISTRY_IMAGE" | tr '[:upper:]' '[:lower:]')
+          export FUELOPS_IMAGE=$IMG/fuelops:${{ github.sha }} WEB_IMAGE=$IMG/web:${{ github.sha }}
+          docker compose pull api worker web
+          docker compose up -d --no-build --wait
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do curl -fs localhost:8080/readyz && break; sleep 2; done
+          curl -fs localhost:8080/readyz
+          curl -fs localhost:3000/healthz
+          curl -fs localhost:8080/api/v1/system/status | tee status.json
+          python3 -c "import json;d=json.load(open('status.json'))['data'];print('overall',d['overall']);assert d['overall'] in ('healthy','degraded')"
+      - if: always()
+        run: docker compose logs --tail=100 api worker web
+      - if: always()
+        run: docker compose down -v

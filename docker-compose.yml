@@ -2,7 +2,7 @@
 # Observability (Prometheus + Grafana): `docker compose --profile observability up -d`.
 x-backend: &backend
   build: .
-  image: fuelops:local
+  image: ${FUELOPS_IMAGE:-fuelops:local}
   env_file: [{ path: .env, required: false }]
   environment:
     SIM_BASE_URL: http://simulator-api:8000
@@ -50,7 +50,7 @@ services:
 
   web:
     build: ./frontend
-    image: fuelops-web:local
+    image: ${WEB_IMAGE:-fuelops-web:local}
     depends_on: { api: { condition: service_healthy } }
     ports: ["3000:80"]
     restart: unless-stopped
